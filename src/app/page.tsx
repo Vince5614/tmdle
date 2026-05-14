@@ -1,86 +1,57 @@
-import GameCard from "@/components/GameCard";
+import GamesSection from "@/components/GamesSection";
 
-const GAMES = [
-  {
-    number: 1,
-    title: "Daily Game 1",
-    description: "A daily Trackmania challenge. New puzzle drops every midnight.",
-    accentColor: "#3b82f6",
-  },
-  {
-    number: 2,
-    title: "Daily Game 2",
-    description: "A daily Trackmania challenge. New puzzle drops every midnight.",
-    accentColor: "#22c55e",
-  },
-  {
-    number: 3,
-    title: "Daily Game 3",
-    description: "A daily Trackmania challenge. New puzzle drops every midnight.",
-    accentColor: "#f97316",
-  },
-  {
-    number: 4,
-    title: "Daily Game 4",
-    description: "A daily Trackmania challenge. New puzzle drops every midnight.",
-    accentColor: "#a855f7",
-  },
-  {
-    number: 5,
-    title: "Daily Game 5",
-    description: "A daily Trackmania challenge. New puzzle drops every midnight.",
-    accentColor: "#ef4444",
-  },
-  {
-    number: 6,
-    title: "Daily Game 6",
-    description: "A daily Trackmania challenge. New puzzle drops every midnight.",
-    accentColor: "#06b6d4",
-  },
-];
+const today = new Date().toLocaleDateString("en-GB", {
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+});
 
 export default function HomePage() {
   return (
-    <div className="mx-auto max-w-6xl px-6 py-20">
-      {/* Hero */}
-      <div className="mb-16 text-center">
-        <h1
-          className="bg-gradient-to-r from-white via-cyan-200 to-cyan-400 bg-clip-text text-7xl font-black tracking-widest text-transparent sm:text-8xl"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
-          TMDLE
-        </h1>
-        <p className="mt-4 text-base tracking-wide text-gray-400 sm:text-lg">
-          Daily Trackmania games.{" "}
-          <span className="text-white">Every day.</span>
+    <div className="mx-auto max-w-6xl px-6 py-14">
+
+      {/* ── Hero ── */}
+      <div className="mb-12">
+        <p className="mb-4 text-xs font-medium uppercase tracking-[0.25em] text-gray-600">
+          {today}
         </p>
-        <div className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-cyan-400/25 bg-cyan-400/8 px-4 py-1.5 text-xs font-semibold tracking-widest text-cyan-400">
-          <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
-          by chilly
+
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1
+              className="bg-gradient-to-r from-white via-cyan-300 to-blue-500 bg-clip-text text-6xl font-normal leading-none tracking-tight text-transparent sm:text-7xl lg:text-8xl"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              TMDLE
+            </h1>
+            <p className="mt-3 max-w-sm text-base text-gray-400">
+              Daily Trackmania games —{" "}
+              <span className="text-white">new challenges every midnight.</span>
+            </p>
+          </div>
+
+          {/* Right side — by chilly (clickable) */}
+          <div className="flex flex-col items-start gap-2 sm:items-end">
+            <a
+              href="https://www.twitch.tv/chilly7383"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full border border-cyan-500/25 bg-cyan-500/8 px-4 py-1.5 text-xs font-medium tracking-widest text-cyan-400 transition-colors hover:border-cyan-400/50 hover:bg-cyan-400/15 hover:text-cyan-300"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
+              by chilly
+            </a>
+            <p className="text-xs text-gray-600">6 games · daily seed</p>
+          </div>
         </div>
+
+        {/* Divider */}
+        <div className="mt-8 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
       </div>
 
-      {/* Section label */}
-      <div className="mb-8 flex items-center gap-4">
-        <div className="h-px flex-1 bg-white/8" />
-        <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gray-600">
-          Today&apos;s Games
-        </span>
-        <div className="h-px flex-1 bg-white/8" />
-      </div>
-
-      {/* Card grid */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {GAMES.map((game) => (
-          <GameCard
-            key={game.number}
-            number={game.number}
-            title={game.title}
-            description={game.description}
-            accentColor={game.accentColor}
-          />
-        ))}
-      </div>
+      {/* ── Games section (client — has search) ── */}
+      <GamesSection />
     </div>
   );
 }
