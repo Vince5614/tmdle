@@ -277,6 +277,9 @@ function GuessInput({ allMapNames, value, onChange, onSubmit, disabled, wrongGue
       }).slice(0, 10)
     : [];
 
+  const isValidGuess = allMapNames.includes(value);
+  const showNoMatch = value.length > 2 && filtered.length === 0;
+
   function select(name: string) {
     onChange(name);
     setOpen(false);
@@ -305,12 +308,19 @@ function GuessInput({ allMapNames, value, onChange, onSubmit, disabled, wrongGue
             onFocus={() => setOpen(true)}
             onBlur={() => setTimeout(() => setOpen(false), 150)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && value.trim()) onSubmit(value.trim());
+              if (e.key === "Enter" && isValidGuess) onSubmit(value.trim());
               if (e.key === "Escape") setOpen(false);
             }}
             placeholder="Type a map name…"
-            className="w-full rounded-xl border border-white/10 bg-[#111] px-4 py-3 text-sm text-white placeholder-gray-500 outline-none transition-colors focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-40"
+            className={`w-full rounded-xl border bg-[#111] px-4 py-3 text-sm text-white placeholder-gray-500 outline-none transition-colors focus:ring-1 disabled:cursor-not-allowed disabled:opacity-40 ${
+              showNoMatch
+                ? "border-red-500/40 focus:border-red-500/50 focus:ring-red-500/10"
+                : "border-white/10 focus:border-cyan-500/50 focus:ring-cyan-500/20"
+            }`}
           />
+          {showNoMatch && (
+            <p className="absolute -bottom-5 left-1 text-[11px] text-red-400/80">No map found</p>
+          )}
           {open && filtered.length > 0 && (
             <ul className="absolute left-0 right-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-xl border border-white/10 bg-[#1a1a1a] shadow-2xl">
               {filtered.map((name) => (
@@ -327,7 +337,7 @@ function GuessInput({ allMapNames, value, onChange, onSubmit, disabled, wrongGue
           )}
         </div>
         <button
-          disabled={disabled || !value.trim()}
+          disabled={disabled || !isValidGuess}
           onClick={() => onSubmit(value.trim())}
           className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-5 py-3 text-sm font-semibold text-cyan-400 transition-all hover:border-cyan-400/50 hover:bg-cyan-400/15 disabled:cursor-not-allowed disabled:opacity-30"
           style={{ fontFamily: "var(--font-display)" }}

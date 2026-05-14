@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useUser, SignInButton } from "@clerk/nextjs";
+import { useUser, SignInButton, SignOutButton } from "@clerk/nextjs";
 
 interface HistoryEntry {
   dayNumber: number;
@@ -37,7 +37,7 @@ function computeStreaks(entries: HistoryEntry[]) {
 }
 
 export default function ProfilePage() {
-  const { isSignedIn, isLoaded, user } = useUser();
+  const { isSignedIn, isLoaded } = useUser();
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [ready, setReady] = useState(false);
 
@@ -93,28 +93,53 @@ export default function ProfilePage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
       {/* Header */}
-      <div className="mb-8">
-        <p className="text-xs uppercase tracking-[0.2em] text-gray-600 mb-1" style={{ fontFamily: "var(--font-display)" }}>
-          MapGuessr
-        </p>
-        <h1 className="text-4xl text-white sm:text-5xl" style={{ fontFamily: "var(--font-display)" }}>
-          Your
-          <span className="bg-gradient-to-r from-cyan-300 to-blue-500 bg-clip-text text-transparent"> Stats</span>
-        </h1>
-        {isSignedIn && user && (
-          <p className="mt-2 text-sm text-gray-500">
-            Signed in as <span className="text-gray-300">{user.username ?? user.firstName ?? "you"}</span>
+      <div className="mb-8 flex items-start justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-[0.2em] text-gray-500 mb-1" style={{ fontFamily: "var(--font-display)" }}>
+            MapGuessr
           </p>
+          <h1 className="text-4xl text-white sm:text-5xl" style={{ fontFamily: "var(--font-display)" }}>
+            Your
+            <span className="bg-gradient-to-r from-cyan-300 to-blue-500 bg-clip-text text-transparent"> Stats</span>
+          </h1>
+        </div>
+
+        {/* Auth controls — no personal info shown */}
+        {isLoaded && isSignedIn && (
+          <SignOutButton>
+            <button className="mt-1 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-gray-400 transition-colors hover:text-gray-200"
+              style={{ fontFamily: "var(--font-display)" }}>
+              Sign out
+            </button>
+          </SignOutButton>
         )}
-        {!isSignedIn && isLoaded && (
-          <p className="mt-2 text-sm text-gray-500">
-            Sign in to save your results across devices.{" "}
-            <SignInButton mode="modal">
-              <button className="text-cyan-400 hover:underline">Sign in</button>
-            </SignInButton>
-          </p>
+        {isLoaded && !isSignedIn && (
+          <SignInButton mode="modal">
+            <button className="mt-1 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-xs font-semibold text-cyan-400 transition-all hover:border-cyan-400/50 hover:bg-cyan-400/15"
+              style={{ fontFamily: "var(--font-display)" }}>
+              Sign in
+            </button>
+          </SignInButton>
         )}
       </div>
+
+      {/* Signed-in indicator — no name, no email */}
+      {isLoaded && isSignedIn && (
+        <div className="mb-6 flex items-center gap-2 rounded-xl border border-white/8 bg-white/[0.03] px-4 py-2.5">
+          <span className="text-green-400 text-xs">●</span>
+          <p className="text-xs text-gray-400" style={{ fontFamily: "var(--font-display)" }}>
+            Results saved to your account
+          </p>
+        </div>
+      )}
+      {isLoaded && !isSignedIn && (
+        <div className="mb-6 flex items-center gap-2 rounded-xl border border-white/8 bg-white/[0.03] px-4 py-2.5">
+          <span className="text-yellow-400 text-xs">●</span>
+          <p className="text-xs text-gray-400" style={{ fontFamily: "var(--font-display)" }}>
+            Sign in to save results across devices
+          </p>
+        </div>
+      )}
 
       {/* Stat tiles */}
       <div className="mb-8 grid grid-cols-4 gap-3">
@@ -130,7 +155,7 @@ export default function ProfilePage() {
 
       {/* History */}
       <div className="mb-4 flex items-center justify-between">
-        <span className="text-xs uppercase tracking-[0.2em] text-gray-600" style={{ fontFamily: "var(--font-display)" }}>
+        <span className="text-xs uppercase tracking-[0.2em] text-gray-500" style={{ fontFamily: "var(--font-display)" }}>
           History
         </span>
         {total > 0 && (
@@ -168,7 +193,7 @@ export default function ProfilePage() {
                   Day #{entry.dayNumber}
                 </p>
                 {entry.dateLabel && (
-                  <p className="text-xs text-gray-600">{entry.dateLabel}</p>
+                  <p className="text-xs text-gray-500">{entry.dateLabel}</p>
                 )}
               </div>
               <div className="flex items-center gap-4">
