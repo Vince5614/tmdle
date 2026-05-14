@@ -17,7 +17,14 @@ export default function Navbar() {
           >
             TMDLE
           </span>
-          <span className="text-xs font-medium text-cyan-400">by chilly</span>
+          <a
+            href="https://www.twitch.tv/chilly7383"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs font-medium text-cyan-400 transition-colors hover:text-cyan-300"
+          >
+            by chilly
+          </a>
         </Link>
 
         {/* Desktop nav */}

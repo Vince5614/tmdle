@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
-import { Turret_Road, Space_Grotesk } from "next/font/google";
+import localFont from "next/font/local";
+import { Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
-const turretRoad = Turret_Road({
+const unbounded = localFont({
+  src: "../fonts/Unbounded-Regular.ttf",
   variable: "--font-display",
-  subsets: ["latin"],
-  weight: ["700", "800"],
+  weight: "400",
 });
 
 const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
+  variable: "--font-sans",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
 });
@@ -28,7 +29,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${turretRoad.variable} ${spaceGrotesk.variable} h-full`}>
+    <html lang="en" className={`${unbounded.variable} ${spaceGrotesk.variable} h-full`}>
       <body className="flex min-h-full flex-col bg-[#0a0a0a] text-white antialiased">
         <Navbar />
         <main className="flex-1">{children}</main>
