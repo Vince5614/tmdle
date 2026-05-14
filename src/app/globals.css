@@ -48,6 +48,13 @@ body {
   }
 }
 
+/* Hide Clerk development mode badge (bottom-left indicator) */
+.cl-badge,
+.cl-impersonationFab,
+[data-testid="clerk-badge"] {
+  display: none !important;
+}
+
 /* Per-card colored glow on hover */
 .game-card {
   transition: box-shadow 0.25s ease, transform 0.25s ease;

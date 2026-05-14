@@ -42,7 +42,7 @@ export default function HomePage() {
               <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
               by chilly
             </a>
-            <p className="text-xs text-gray-600">6 games · daily seed</p>
+            <p className="text-xs text-gray-600">9 games · daily seed</p>
           </div>
         </div>
 
