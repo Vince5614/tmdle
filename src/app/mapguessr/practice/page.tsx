@@ -4,15 +4,15 @@ import { getDailyIndex } from "@/lib/seed";
 import type { CampaignMap, Clue, DailyChallenge } from "@/types/mapguessr";
 import MapGuessr from "../MapGuessr";
 
-// Always fresh — each visit picks a new random map
-export const dynamic = "force-dynamic";
+// Revalidate once per day — same practice map all day, changes at midnight
+export const revalidate = 3600;
 
 async function buildPracticeChallenge(): Promise<DailyChallenge> {
   const allMapNames = getAllMapNames();
   const todayIdx = getDailyIndex(allMapNames.length);
 
-  // Pick a map different from today's, rotating every request via timestamp
-  let practiceIdx = Math.floor(Date.now() / 1000) % allMapNames.length;
+  // Pick a consistent map for the day, different from the daily
+  let practiceIdx = (todayIdx + Math.floor(allMapNames.length / 2)) % allMapNames.length;
   if (practiceIdx === todayIdx) practiceIdx = (practiceIdx + 1) % allMapNames.length;
 
   const practiceName = allMapNames[practiceIdx];

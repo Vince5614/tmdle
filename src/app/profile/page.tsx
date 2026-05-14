@@ -12,12 +12,24 @@ interface HistoryEntry {
   wrongGuesses: string[];
 }
 
+interface RankData {
+  rank: number;
+  total: number;
+  percentile: number;
+}
+
 function emojiGrid(won: boolean, clueIndex: number): string {
   return Array.from({ length: 4 }, (_, i) => {
     if (i < clueIndex) return "🟥";
     if (i === clueIndex) return won ? "🟩" : "🟥";
     return "⬛";
   }).join("");
+}
+
+function dayNumberToDate(dayNumber: number): string {
+  const launch = new Date("2026-05-14T00:00:00Z");
+  const d = new Date(launch.getTime() + (dayNumber - 1) * 86_400_000);
+  return `${d.getUTCMonth() + 1}/${d.getUTCDate()}/${d.getUTCFullYear()}`;
 }
 
 function computeStreaks(entries: HistoryEntry[]) {
@@ -39,6 +51,7 @@ function computeStreaks(entries: HistoryEntry[]) {
 export default function ProfilePage() {
   const { isSignedIn, isLoaded } = useUser();
   const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [ranks, setRanks] = useState<Record<number, RankData>>({});
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -50,14 +63,28 @@ export default function ProfilePage() {
           const res = await fetch("/api/results?game=mapguessr");
           if (res.ok) {
             const data = await res.json();
-            setHistory(
-              data.map((r: { day_number: number; won: boolean; clue_index: number; wrong_guesses: string[] }) => ({
-                dayNumber: r.day_number,
-                won: r.won,
-                clueIndex: r.clue_index,
-                wrongGuesses: r.wrong_guesses,
-              }))
+            const entries: HistoryEntry[] = data.map((r: { day_number: number; won: boolean; clue_index: number; wrong_guesses: string[] }) => ({
+              dayNumber: r.day_number,
+              won: r.won,
+              clueIndex: r.clue_index,
+              wrongGuesses: r.wrong_guesses,
+            }));
+            setHistory(entries);
+
+            // Fetch ranks in parallel for all games
+            const rankResults = await Promise.all(
+              entries.map((e) =>
+                fetch(`/api/results/rank?game=mapguessr&day_number=${e.dayNumber}`)
+                  .then((r) => r.json())
+                  .then((d) => ({ dayNumber: e.dayNumber, ...d }))
+                  .catch(() => null)
+              )
             );
+            const rankMap: Record<number, RankData> = {};
+            rankResults.forEach((r) => {
+              if (r?.rank) rankMap[r.dayNumber] = { rank: r.rank, total: r.total, percentile: r.percentile };
+            });
+            setRanks(rankMap);
           }
         } else {
           const data: HistoryEntry[] = JSON.parse(localStorage.getItem("mg_history") ?? "[]");
@@ -104,7 +131,6 @@ export default function ProfilePage() {
           </h1>
         </div>
 
-        {/* Auth controls — no personal info shown */}
         {isLoaded && isSignedIn && (
           <SignOutButton>
             <button className="mt-1 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-gray-400 transition-colors hover:text-gray-200"
@@ -123,7 +149,6 @@ export default function ProfilePage() {
         )}
       </div>
 
-      {/* Signed-in indicator — no name, no email */}
       {isLoaded && isSignedIn && (
         <div className="mb-6 flex items-center gap-2 rounded-xl border border-white/8 bg-white/[0.03] px-4 py-2.5">
           <span className="text-green-400 text-xs">●</span>
@@ -181,32 +206,38 @@ export default function ProfilePage() {
         </div>
       ) : (
         <div className="flex flex-col gap-2">
-          {sorted.map((entry) => (
-            <div
-              key={entry.dayNumber}
-              className={`flex items-center justify-between rounded-xl border px-5 py-4 ${
-                entry.won ? "border-green-500/15 bg-green-500/5" : "border-white/5 bg-[#111]"
-              }`}
-            >
-              <div>
-                <p className="text-sm font-semibold text-white" style={{ fontFamily: "var(--font-display)" }}>
-                  Day #{entry.dayNumber}
-                </p>
-                {entry.dateLabel && (
-                  <p className="text-xs text-gray-500">{entry.dateLabel}</p>
-                )}
+          {sorted.map((entry) => {
+            const rank = ranks[entry.dayNumber];
+            const dateStr = entry.dateLabel ?? dayNumberToDate(entry.dayNumber);
+            return (
+              <div
+                key={entry.dayNumber}
+                className={`flex items-center justify-between rounded-xl border px-5 py-4 ${
+                  entry.won ? "border-green-500/15 bg-green-500/5" : "border-white/5 bg-[#111]"
+                }`}
+              >
+                <div>
+                  <p className="text-sm font-semibold text-white" style={{ fontFamily: "var(--font-display)" }}>
+                    {dateStr}
+                  </p>
+                  {rank && (
+                    <p className="text-xs text-gray-500">
+                      #{rank.rank} of {rank.total} · Top {rank.percentile}%
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-base tracking-wider">{emojiGrid(entry.won, entry.clueIndex)}</span>
+                  <span
+                    className={`w-8 text-right text-xs font-semibold ${entry.won ? "text-green-400" : "text-red-400"}`}
+                    style={{ fontFamily: "var(--font-display)" }}
+                  >
+                    {entry.won ? `${4 - entry.clueIndex}/4` : "0/4"}
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-4">
-                <span className="text-base tracking-wider">{emojiGrid(entry.won, entry.clueIndex)}</span>
-                <span
-                  className={`w-8 text-right text-xs font-semibold ${entry.won ? "text-green-400" : "text-red-400"}`}
-                  style={{ fontFamily: "var(--font-display)" }}
-                >
-                  {entry.won ? `${4 - entry.clueIndex}/4` : "0/4"}
-                </span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

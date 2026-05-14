@@ -322,7 +322,7 @@ function GuessInput({ allMapNames, value, onChange, onSubmit, disabled, wrongGue
             <p className="absolute -bottom-5 left-1 text-[11px] text-red-400/80">No map found</p>
           )}
           {open && filtered.length > 0 && (
-            <ul className="absolute left-0 right-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-xl border border-white/10 bg-[#1a1a1a] shadow-2xl">
+            <ul onMouseDown={(e) => e.preventDefault()} className="absolute left-0 right-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-xl border border-white/10 bg-[#1a1a1a] shadow-2xl">
               {filtered.map((name) => (
                 <li key={name}>
                   <button
@@ -482,9 +482,18 @@ export default function MapGuessr({ challenge, mode = "daily" }: {
   const [showIntro, setShowIntro] = useState(false);
   const [showPostGame, setShowPostGame] = useState(false);
   const justFinished = useRef(false);
+  const practiceRestored = useRef(false);
 
   const { isSignedIn } = useUser();
   const saveKey = `mg_day_${dayNumber}`;
+
+  // If the server sent a stale dayNumber (ISR cache), force a fresh render
+  useEffect(() => {
+    const launch = new Date("2026-05-14T00:00:00Z");
+    const clientDay = Math.max(1, Math.floor((Date.now() - launch.getTime()) / 86_400_000) + 1);
+    if (clientDay !== dayNumber) router.refresh();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (mode === "practice") return;
@@ -495,6 +504,32 @@ export default function MapGuessr({ challenge, mode = "daily" }: {
       setShowIntro(true);
     }
   }, [dayNumber, mode]);
+
+  // Restore practice state from sessionStorage
+  useEffect(() => {
+    if (mode !== "practice") return;
+    try {
+      const saved = sessionStorage.getItem(`mg_practice_${map.name}`);
+      if (saved) {
+        const { phase: p, clueIndex: ci, wrong: w } = JSON.parse(saved);
+        dispatch({ type: "RESTORE", payload: { clueIndex: ci ?? 0 } });
+        setPhase(p ?? "playing");
+        setWrong(w ?? []);
+      }
+    } catch {}
+    practiceRestored.current = true;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Save practice state to sessionStorage on every change
+  useEffect(() => {
+    if (mode !== "practice" || !practiceRestored.current) return;
+    try {
+      sessionStorage.setItem(`mg_practice_${map.name}`, JSON.stringify({
+        phase, clueIndex: state.clueIndex, wrong,
+      }));
+    } catch {}
+  }, [phase, wrong, state.clueIndex, mode, map.name]);
 
   useEffect(() => {
     async function restore() {
@@ -585,7 +620,7 @@ export default function MapGuessr({ challenge, mode = "daily" }: {
     return "⬛";
   }).join("");
   const score = phase === "won" ? 4 - state.clueIndex : 0;
-  const shareText = [`MAPGUESSR — Day #${dayNumber}`, emojiGrid, phase === "won" ? `${score}/4 ⭐` : "0/4 ❌", "tmdle.com/mapguessr"].join("\n");
+  const shareText = [`MAPGUESSR — Day #${dayNumber}`, emojiGrid, phase === "won" ? `${score}/4 ⭐` : "0/4 ❌", "https://tmdle.com/mapguessr"].join("\n");
 
   return (
     <>
