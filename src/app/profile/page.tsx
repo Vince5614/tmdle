@@ -6,7 +6,6 @@ import { useUser, SignInButton, SignOutButton } from "@clerk/nextjs";
 
 interface HistoryEntry {
   dayNumber: number;
-  dateLabel?: string;
   won: boolean;
   clueIndex: number;
   wrongGuesses: string[];
@@ -29,7 +28,7 @@ function emojiGrid(won: boolean, clueIndex: number): string {
 function dayNumberToDate(dayNumber: number): string {
   const launch = new Date("2026-05-14T00:00:00Z");
   const d = new Date(launch.getTime() + (dayNumber - 1) * 86_400_000);
-  return `${d.getUTCMonth() + 1}/${d.getUTCDate()}/${d.getUTCFullYear()}`;
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "numeric", year: "numeric" });
 }
 
 function computeStreaks(entries: HistoryEntry[]) {
@@ -67,11 +66,10 @@ export default function ProfilePage() {
               dayNumber: r.day_number,
               won: r.won,
               clueIndex: r.clue_index,
-              wrongGuesses: r.wrong_guesses,
+              wrongGuesses: r.wrong_guesses ?? [],
             }));
             setHistory(entries);
 
-            // Fetch ranks in parallel for all games
             const rankResults = await Promise.all(
               entries.map((e) =>
                 fetch(`/api/results/rank?game=mapguessr&day_number=${e.dayNumber}`)
@@ -87,11 +85,11 @@ export default function ProfilePage() {
             setRanks(rankMap);
           }
         } else {
-          const data: HistoryEntry[] = JSON.parse(localStorage.getItem("mg_history") ?? "[]");
+          const raw = JSON.parse(localStorage.getItem("mg_history") ?? "[]");
           setHistory(
-            data.map((e) => ({
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            raw.map((e: any) => ({
               dayNumber: e.dayNumber,
-              dateLabel: e.dateLabel,
               won: e.won,
               clueIndex: e.clueIndex,
               wrongGuesses: e.wrongGuesses ?? [],
@@ -208,7 +206,6 @@ export default function ProfilePage() {
         <div className="flex flex-col gap-2">
           {sorted.map((entry) => {
             const rank = ranks[entry.dayNumber];
-            const dateStr = entry.dateLabel ?? dayNumberToDate(entry.dayNumber);
             return (
               <div
                 key={entry.dayNumber}
@@ -218,7 +215,7 @@ export default function ProfilePage() {
               >
                 <div>
                   <p className="text-sm font-semibold text-white" style={{ fontFamily: "var(--font-display)" }}>
-                    {dateStr}
+                    {dayNumberToDate(entry.dayNumber)}
                   </p>
                   {rank && (
                     <p className="text-xs text-gray-500">

@@ -311,7 +311,7 @@ function GuessInput({ allMapNames, value, onChange, onSubmit, disabled, wrongGue
               if (e.key === "Enter" && isValidGuess) onSubmit(value.trim());
               if (e.key === "Escape") setOpen(false);
             }}
-            placeholder="Type a map name…"
+            placeholder="Type a campaign track name…"
             className={`w-full rounded-xl border bg-[#111] px-4 py-3 text-sm text-white placeholder-gray-500 outline-none transition-colors focus:ring-1 disabled:cursor-not-allowed disabled:opacity-40 ${
               showNoMatch
                 ? "border-red-500/40 focus:border-red-500/50 focus:ring-red-500/10"
