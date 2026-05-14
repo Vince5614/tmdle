@@ -679,15 +679,13 @@ export default function MapGuessr({ challenge, mode = "daily" }: {
               mode={mode}
               isSignedIn={isSignedIn ?? false}
             />
-            {mode === "practice" && (
-              <button
-                onClick={() => router.push("/mapguessr/practice")}
-                className="w-full rounded-xl border border-cyan-500/30 bg-cyan-500/10 py-3 text-sm font-semibold text-cyan-400 transition-all hover:border-cyan-400/50 hover:bg-cyan-400/15"
-                style={{ fontFamily: "var(--font-display)" }}
-              >
-                🎮 New practice round
-              </button>
-            )}
+            <button
+              onClick={() => router.push("/mapguessr/practice")}
+              className="w-full rounded-xl border border-white/10 bg-white/5 py-3 text-sm text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              🎮 {mode === "practice" ? "New practice round" : "Play a practice round"}
+            </button>
           </div>
         )}
       </div>
