@@ -6,6 +6,7 @@ interface MXResult {
   TrackUID: string;
   Name: string;
   AuthorLogin: string;
+  Username: string | null;
   LengthName: string;
   HasThumbnail: boolean;
   HasScreenshot: boolean;
@@ -75,7 +76,9 @@ export async function getMXMap(mapName: string): Promise<{
   mxWrUsername: string | null;
 } | null> {
   try {
-    const url = `${MX_BASE}/mapsearch2/search?api=on&limit=10&name=${encodeURIComponent(mapName)}`;
+    // Popular maps can have 70+ remixes that share the name as a substring,
+    // pushing the official Nadeo entry out of a small top-N window.
+    const url = `${MX_BASE}/mapsearch2/search?api=on&limit=100&name=${encodeURIComponent(mapName)}`;
     const res = await fetch(url, {
       headers: { "User-Agent": UA },
       next: { revalidate: 86400 },
@@ -83,9 +86,21 @@ export async function getMXMap(mapName: string): Promise<{
     if (!res.ok) return null;
 
     const data: MXSearchResponse = await res.json();
-    const official = data.results?.find(
-      (m) => m.AuthorLogin === "Nadeo" && m.Name === mapName
-    );
+
+    // Match logic, in order of preference:
+    //  1. AuthorLogin === "Nadeo" and Name matches (with whitespace tolerance) —
+    //     covers ~99% of official maps, including ones MX accidentally uploaded
+    //     with trailing spaces (e.g. "Fall 2021 - 07 ").
+    //  2. Username === "Ubisoft Nadeo" and Name matches — covers maps uploaded
+    //     under an alternate Nadeo account ID (e.g. "Winter 2022 - 22").
+    const target = mapName.trim();
+    const official =
+      data.results?.find(
+        (m) => m.AuthorLogin === "Nadeo" && m.Name.trim() === target
+      ) ??
+      data.results?.find(
+        (m) => m.Username === "Ubisoft Nadeo" && m.Name.trim() === target
+      );
     if (!official) return null;
 
     return {

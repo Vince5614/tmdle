@@ -71,7 +71,7 @@ export default function HomePage() {
             MapGuessr
           </h2>
           <p className="mt-0.5 text-xs text-gray-500">
-            Identify today&apos;s campaign map using as few clues as possible.
+            Each guess reveals how the map compares — season, year, car, style. Solve in as few guesses as possible.
           </p>
         </div>
 

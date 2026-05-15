@@ -8,7 +8,7 @@ const GAMES = [
   {
     number: 1,
     title: "MapGuessr",
-    description: "Guess the hidden campaign map using clues — surface, season, screenshot, clip. Fewer clues = higher score.",
+    description: "Each guess reveals how the map compares — season, year, surface, car, style. Solve in as few guesses as possible.",
     accentColor: "#00c4f0",
     image: null as string | null,
     href: "/mapguessr" as string | null,

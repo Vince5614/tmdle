@@ -19,9 +19,10 @@ export async function GET(req: NextRequest) {
 
   if (!data || data.length === 0) return NextResponse.json({ rank: null, total: 0 });
 
-  // Higher score = better: won gives 10 - clue_index, loss gives -1
+  // Higher score = better. Wins always beat losses; among wins, fewer guesses
+  // is better. clue_index == guesses_used - 1.
   const score = (r: { won: boolean; clue_index: number }) =>
-    r.won ? 10 - r.clue_index : -1;
+    r.won ? -r.clue_index : -10000;
 
   const user = data.find((r) => r.user_id === userId);
   if (!user) return NextResponse.json({ rank: null, total: data.length });

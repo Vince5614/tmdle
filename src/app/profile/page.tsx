@@ -17,12 +17,16 @@ interface RankData {
   percentile: number;
 }
 
+// clueIndex stores `guesses_used - 1`. We show a small streak of the user's
+// guesses: red for each miss, green if they ultimately got it.
 function emojiGrid(won: boolean, clueIndex: number): string {
-  return Array.from({ length: 4 }, (_, i) => {
-    if (i < clueIndex) return "🟥";
-    if (i === clueIndex) return won ? "🟩" : "🟥";
-    return "⬛";
-  }).join("");
+  const guesses = clueIndex + 1;
+  // Cap at 10 emojis so the UI doesn't blow up on long games
+  const shown = Math.min(guesses, 10);
+  const cells: string[] = [];
+  for (let i = 0; i < shown - 1; i++) cells.push("🟥");
+  cells.push(won ? "🟩" : "🟥");
+  return cells.join("");
 }
 
 function dayNumberToDate(dayNumber: number): string {
@@ -226,10 +230,12 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-4">
                   <span className="text-base tracking-wider">{emojiGrid(entry.won, entry.clueIndex)}</span>
                   <span
-                    className={`w-8 text-right text-xs font-semibold ${entry.won ? "text-green-400" : "text-red-400"}`}
+                    className={`min-w-[64px] text-right text-xs font-semibold ${entry.won ? "text-green-400" : "text-red-400"}`}
                     style={{ fontFamily: "var(--font-display)" }}
                   >
-                    {entry.won ? `${4 - entry.clueIndex}/4` : "0/4"}
+                    {entry.won
+                      ? `${entry.clueIndex + 1} guess${entry.clueIndex + 1 !== 1 ? "es" : ""}`
+                      : "—"}
                   </span>
                 </div>
               </div>
