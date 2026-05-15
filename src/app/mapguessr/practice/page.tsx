@@ -4,16 +4,22 @@ import { getDailyIndex } from "@/lib/seed";
 import type { CampaignMap, Clue, DailyChallenge } from "@/types/mapguessr";
 import MapGuessr from "../MapGuessr";
 
-// Revalidate once per day — same practice map all day, changes at midnight
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
-async function buildPracticeChallenge(): Promise<DailyChallenge> {
+async function buildPracticeChallenge(seed: number | null): Promise<DailyChallenge> {
   const allMapNames = getAllMapNames();
   const todayIdx = getDailyIndex(allMapNames.length);
 
-  // Pick a consistent map for the day, different from the daily
-  let practiceIdx = (todayIdx + Math.floor(allMapNames.length / 2)) % allMapNames.length;
-  if (practiceIdx === todayIdx) practiceIdx = (practiceIdx + 1) % allMapNames.length;
+  let practiceIdx: number;
+  if (seed !== null) {
+    // Seed from URL — any map except today's daily
+    practiceIdx = Math.abs(seed) % allMapNames.length;
+    if (practiceIdx === todayIdx) practiceIdx = (practiceIdx + 1) % allMapNames.length;
+  } else {
+    // No seed — default to the day-stable practice map
+    practiceIdx = (todayIdx + Math.floor(allMapNames.length / 2)) % allMapNames.length;
+    if (practiceIdx === todayIdx) practiceIdx = (practiceIdx + 1) % allMapNames.length;
+  }
 
   const practiceName = allMapNames[practiceIdx];
   const parsed = parseMapName(practiceName)!;
@@ -79,7 +85,13 @@ async function buildPracticeChallenge(): Promise<DailyChallenge> {
   };
 }
 
-export default async function PracticePage() {
-  const challenge = await buildPracticeChallenge();
+export default async function PracticePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ seed?: string }>;
+}) {
+  const params = await searchParams;
+  const seed = params.seed ? parseInt(params.seed, 10) : null;
+  const challenge = await buildPracticeChallenge(isNaN(seed ?? NaN) ? null : seed);
   return <MapGuessr challenge={challenge} mode="practice" />;
 }

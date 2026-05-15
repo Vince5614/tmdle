@@ -43,13 +43,16 @@ const FLAG_EMOJI: Record<string, string> = {
   "Argentina": "🇦🇷", "Mexico": "🇲🇽", "Chile": "🇨🇱", "Colombia": "🇨🇴",
 };
 
+const CONTINENTS = new Set(["Europe", "North America", "South America", "Asia", "Africa", "Oceania", "Middle East"]);
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function extractCountryFlag(zone: any): string {
-  const chain: string[] = [];
   let z = zone;
-  while (z) { chain.push(z.name); z = z.parent; }
-  const country = chain.length >= 3 ? chain[chain.length - 3] : chain[0] ?? "";
-  return FLAG_EMOJI[country] ?? "🌍";
+  while (z?.parent) {
+    if (CONTINENTS.has(z.parent.name)) return FLAG_EMOJI[z.name] ?? "🌍";
+    z = z.parent;
+  }
+  return FLAG_EMOJI[zone?.name ?? ""] ?? "🌍";
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

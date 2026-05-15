@@ -152,7 +152,7 @@ function PostGameModal({ won, emojiGrid, score, mapName, mxId, mode, isSignedIn,
           )}
 
           <button
-            onClick={() => router.push("/mapguessr/practice")}
+            onClick={() => router.push(`/mapguessr/practice?seed=${Math.floor(Math.random() * 100000)}`)}
             className="w-full rounded-xl border border-white/10 bg-white/5 py-3 text-sm text-gray-300 transition-colors hover:bg-white/10"
             style={{ fontFamily: "var(--font-display)" }}
           >
@@ -481,6 +481,7 @@ export default function MapGuessr({ challenge, mode = "daily" }: {
   const [wrong, setWrong] = useState<string[]>([]);
   const [showIntro, setShowIntro] = useState(false);
   const [showPostGame, setShowPostGame] = useState(false);
+  const [nudgeDismissed, setNudgeDismissed] = useState(false);
   const justFinished = useRef(false);
   const practiceRestored = useRef(false);
 
@@ -571,6 +572,7 @@ export default function MapGuessr({ challenge, mode = "daily" }: {
         body: JSON.stringify({ game: "mapguessr", day_number: dayNumber, won: phase === "won", clue_index: state.clueIndex, wrong_guesses: wrong }),
       }).catch(() => {});
     } else {
+      // Save to localStorage for guest restore
       try {
         localStorage.setItem(saveKey, JSON.stringify(payload));
         const prev = JSON.parse(localStorage.getItem("mg_history") ?? "[]");
@@ -579,6 +581,12 @@ export default function MapGuessr({ challenge, mode = "daily" }: {
           localStorage.setItem("mg_history", JSON.stringify(prev));
         }
       } catch {}
+      // Also save anonymously to Supabase for play count analytics
+      fetch("/api/results/guest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ game: "mapguessr", day_number: dayNumber, won: phase === "won", clue_index: state.clueIndex, wrong_guesses: wrong }),
+      }).catch(() => {});
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
@@ -670,6 +678,16 @@ export default function MapGuessr({ challenge, mode = "daily" }: {
           <ScoreDots clueIndex={state.clueIndex} phase={phase} />
         </div>
 
+        {/* Guest nudge banner */}
+        {!isSignedIn && !nudgeDismissed && !gameOver && mode === "daily" && (
+          <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-white/8 bg-white/[0.03] px-4 py-2.5">
+            <p className="text-xs text-gray-400" style={{ fontFamily: "var(--font-display)" }}>
+              💾 <SignInButton mode="modal"><button className="text-cyan-400 hover:text-cyan-300 font-semibold transition-colors">Sign in</button></SignInButton> to save your result and appear on the leaderboard
+            </p>
+            <button onClick={() => setNudgeDismissed(true)} className="text-gray-600 hover:text-gray-400 transition-colors text-sm shrink-0">✕</button>
+          </div>
+        )}
+
         {/* Guess input — shown at top while playing */}
         {!gameOver && (
           <div className="relative mb-6" style={{ zIndex: 30 }}>
@@ -715,7 +733,7 @@ export default function MapGuessr({ challenge, mode = "daily" }: {
               isSignedIn={isSignedIn ?? false}
             />
             <button
-              onClick={() => router.push("/mapguessr/practice")}
+              onClick={() => router.push(`/mapguessr/practice?seed=${Math.floor(Math.random() * 100000)}`)}
               className="w-full rounded-xl border border-white/10 bg-white/5 py-3 text-sm text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
               style={{ fontFamily: "var(--font-display)" }}
             >

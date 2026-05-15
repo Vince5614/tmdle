@@ -20,14 +20,17 @@ const FLAG_EMOJI: Record<string, string> = {
   "Malaysia": "🇲🇾", "Singapore": "🇸🇬", "Thailand": "🇹🇭", "Philippines": "🇵🇭",
 };
 
+const CONTINENTS = new Set(["Europe", "North America", "South America", "Asia", "Africa", "Oceania", "Middle East"]);
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function extractCountry(zone: any): { name: string; emoji: string } {
-  const chain: string[] = [];
   let z = zone;
-  while (z) { chain.push(z.name); z = z.parent; }
-  // chain = [local, ..., country, continent, "World"]
-  const countryName = chain.length >= 3 ? chain[chain.length - 3] : chain[0] ?? "";
-  return { name: countryName, emoji: FLAG_EMOJI[countryName] ?? "🌍" };
+  while (z?.parent) {
+    if (CONTINENTS.has(z.parent.name)) return { name: z.name, emoji: FLAG_EMOJI[z.name] ?? "🌍" };
+    z = z.parent;
+  }
+  const name = zone?.name ?? "";
+  return { name, emoji: FLAG_EMOJI[name] ?? "🌍" };
 }
 
 export async function GET(req: NextRequest) {
