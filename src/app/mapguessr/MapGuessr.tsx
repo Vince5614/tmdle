@@ -152,7 +152,7 @@ function PostGameModal({ won, emojiGrid, score, mapName, mxId, mode, isSignedIn,
           )}
 
           <button
-            onClick={() => router.push("/mapguessr/practice")}
+            onClick={() => router.push(`/mapguessr/practice?seed=${Math.floor(Math.random() * 100000)}`)}
             className="w-full rounded-xl border border-white/10 bg-white/5 py-3 text-sm text-gray-300 transition-colors hover:bg-white/10"
             style={{ fontFamily: "var(--font-display)" }}
           >
@@ -277,6 +277,9 @@ function GuessInput({ allMapNames, value, onChange, onSubmit, disabled, wrongGue
       }).slice(0, 10)
     : [];
 
+  const isValidGuess = allMapNames.includes(value);
+  const showNoMatch = value.length > 2 && filtered.length === 0;
+
   function select(name: string) {
     onChange(name);
     setOpen(false);
@@ -305,14 +308,21 @@ function GuessInput({ allMapNames, value, onChange, onSubmit, disabled, wrongGue
             onFocus={() => setOpen(true)}
             onBlur={() => setTimeout(() => setOpen(false), 150)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && value.trim()) onSubmit(value.trim());
+              if (e.key === "Enter" && isValidGuess) onSubmit(value.trim());
               if (e.key === "Escape") setOpen(false);
             }}
-            placeholder="Type a map name…"
-            className="w-full rounded-xl border border-white/10 bg-[#111] px-4 py-3 text-sm text-white placeholder-gray-500 outline-none transition-colors focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-40"
+            placeholder="Type a campaign track name…"
+            className={`w-full rounded-xl border bg-[#111] px-4 py-3 text-sm text-white placeholder-gray-500 outline-none transition-colors focus:ring-1 disabled:cursor-not-allowed disabled:opacity-40 ${
+              showNoMatch
+                ? "border-red-500/40 focus:border-red-500/50 focus:ring-red-500/10"
+                : "border-white/10 focus:border-cyan-500/50 focus:ring-cyan-500/20"
+            }`}
           />
+          {showNoMatch && (
+            <p className="absolute -bottom-5 left-1 text-[11px] text-red-400/80">No map found</p>
+          )}
           {open && filtered.length > 0 && (
-            <ul className="absolute left-0 right-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-xl border border-white/10 bg-[#1a1a1a] shadow-2xl">
+            <ul onMouseDown={(e) => e.preventDefault()} className="absolute left-0 right-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-xl border border-white/10 bg-[#1a1a1a] shadow-2xl">
               {filtered.map((name) => (
                 <li key={name}>
                   <button
@@ -327,7 +337,7 @@ function GuessInput({ allMapNames, value, onChange, onSubmit, disabled, wrongGue
           )}
         </div>
         <button
-          disabled={disabled || !value.trim()}
+          disabled={disabled || !isValidGuess}
           onClick={() => onSubmit(value.trim())}
           className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-5 py-3 text-sm font-semibold text-cyan-400 transition-all hover:border-cyan-400/50 hover:bg-cyan-400/15 disabled:cursor-not-allowed disabled:opacity-30"
           style={{ fontFamily: "var(--font-display)" }}
@@ -471,10 +481,20 @@ export default function MapGuessr({ challenge, mode = "daily" }: {
   const [wrong, setWrong] = useState<string[]>([]);
   const [showIntro, setShowIntro] = useState(false);
   const [showPostGame, setShowPostGame] = useState(false);
+  const [nudgeDismissed, setNudgeDismissed] = useState(false);
   const justFinished = useRef(false);
+  const practiceRestored = useRef(false);
 
   const { isSignedIn } = useUser();
   const saveKey = `mg_day_${dayNumber}`;
+
+  // If the server sent a stale dayNumber (ISR cache), force a fresh render
+  useEffect(() => {
+    const launch = new Date("2026-05-14T00:00:00Z");
+    const clientDay = Math.max(1, Math.floor((Date.now() - launch.getTime()) / 86_400_000) + 1);
+    if (clientDay !== dayNumber) router.refresh();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (mode === "practice") return;
@@ -485,6 +505,32 @@ export default function MapGuessr({ challenge, mode = "daily" }: {
       setShowIntro(true);
     }
   }, [dayNumber, mode]);
+
+  // Restore practice state from sessionStorage
+  useEffect(() => {
+    if (mode !== "practice") return;
+    try {
+      const saved = sessionStorage.getItem(`mg_practice_${map.name}`);
+      if (saved) {
+        const { phase: p, clueIndex: ci, wrong: w } = JSON.parse(saved);
+        dispatch({ type: "RESTORE", payload: { clueIndex: ci ?? 0 } });
+        setPhase(p ?? "playing");
+        setWrong(w ?? []);
+      }
+    } catch {}
+    practiceRestored.current = true;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Save practice state to sessionStorage on every change
+  useEffect(() => {
+    if (mode !== "practice" || !practiceRestored.current) return;
+    try {
+      sessionStorage.setItem(`mg_practice_${map.name}`, JSON.stringify({
+        phase, clueIndex: state.clueIndex, wrong,
+      }));
+    } catch {}
+  }, [phase, wrong, state.clueIndex, mode, map.name]);
 
   useEffect(() => {
     async function restore() {
@@ -526,6 +572,7 @@ export default function MapGuessr({ challenge, mode = "daily" }: {
         body: JSON.stringify({ game: "mapguessr", day_number: dayNumber, won: phase === "won", clue_index: state.clueIndex, wrong_guesses: wrong }),
       }).catch(() => {});
     } else {
+      // Save to localStorage for guest restore
       try {
         localStorage.setItem(saveKey, JSON.stringify(payload));
         const prev = JSON.parse(localStorage.getItem("mg_history") ?? "[]");
@@ -534,6 +581,12 @@ export default function MapGuessr({ challenge, mode = "daily" }: {
           localStorage.setItem("mg_history", JSON.stringify(prev));
         }
       } catch {}
+      // Also save anonymously to Supabase for play count analytics
+      fetch("/api/results/guest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ game: "mapguessr", day_number: dayNumber, won: phase === "won", clue_index: state.clueIndex, wrong_guesses: wrong }),
+      }).catch(() => {});
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
@@ -575,7 +628,7 @@ export default function MapGuessr({ challenge, mode = "daily" }: {
     return "⬛";
   }).join("");
   const score = phase === "won" ? 4 - state.clueIndex : 0;
-  const shareText = [`MAPGUESSR — Day #${dayNumber}`, emojiGrid, phase === "won" ? `${score}/4 ⭐` : "0/4 ❌", "tmdle.com/mapguessr"].join("\n");
+  const shareText = [`MAPGUESSR — Day #${dayNumber}`, emojiGrid, phase === "won" ? `${score}/4 ⭐` : "0/4 ❌", "https://tmdle.com/mapguessr"].join("\n");
 
   return (
     <>
@@ -625,6 +678,16 @@ export default function MapGuessr({ challenge, mode = "daily" }: {
           <ScoreDots clueIndex={state.clueIndex} phase={phase} />
         </div>
 
+        {/* Guest nudge banner */}
+        {!isSignedIn && !nudgeDismissed && !gameOver && mode === "daily" && (
+          <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-white/8 bg-white/[0.03] px-4 py-2.5">
+            <p className="text-xs text-gray-400" style={{ fontFamily: "var(--font-display)" }}>
+              💾 <SignInButton mode="modal"><button className="text-cyan-400 hover:text-cyan-300 font-semibold transition-colors">Sign in</button></SignInButton> to save your result and appear on the leaderboard
+            </p>
+            <button onClick={() => setNudgeDismissed(true)} className="text-gray-600 hover:text-gray-400 transition-colors text-sm shrink-0">✕</button>
+          </div>
+        )}
+
         {/* Guess input — shown at top while playing */}
         {!gameOver && (
           <div className="relative mb-6" style={{ zIndex: 30 }}>
@@ -669,15 +732,13 @@ export default function MapGuessr({ challenge, mode = "daily" }: {
               mode={mode}
               isSignedIn={isSignedIn ?? false}
             />
-            {mode === "practice" && (
-              <button
-                onClick={() => router.push("/mapguessr/practice")}
-                className="w-full rounded-xl border border-cyan-500/30 bg-cyan-500/10 py-3 text-sm font-semibold text-cyan-400 transition-all hover:border-cyan-400/50 hover:bg-cyan-400/15"
-                style={{ fontFamily: "var(--font-display)" }}
-              >
-                🎮 New practice round
-              </button>
-            )}
+            <button
+              onClick={() => router.push(`/mapguessr/practice?seed=${Math.floor(Math.random() * 100000)}`)}
+              className="w-full rounded-xl border border-white/10 bg-white/5 py-3 text-sm text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              🎮 {mode === "practice" ? "New practice round" : "Play a practice round"}
+            </button>
           </div>
         )}
       </div>

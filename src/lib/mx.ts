@@ -3,6 +3,7 @@ const UA = "tmdle/1.0 contact@chilly7383";
 
 interface MXResult {
   TrackID: number;
+  TrackUID: string;
   Name: string;
   AuthorLogin: string;
   LengthName: string;
@@ -60,16 +61,18 @@ export function formatTime(ms: number): string {
   const minutes = Math.floor(ms / 60000);
   const seconds = Math.floor((ms % 60000) / 1000);
   const millis = ms % 1000;
+  if (minutes === 0) return `${seconds}.${String(millis).padStart(3, "0")}`;
   return `${minutes}:${String(seconds).padStart(2, "0")}.${String(millis).padStart(3, "0")}`;
 }
 
 export async function getMXMap(mapName: string): Promise<{
   id: number;
+  trackUid: string;
   lengthName: string;
   surface: MXSurface;
   tagNames: string[];
-  wrTime: number | null;
-  wrUsername: string | null;
+  mxWrTime: number | null;
+  mxWrUsername: string | null;
 } | null> {
   try {
     const url = `${MX_BASE}/mapsearch2/search?api=on&limit=10&name=${encodeURIComponent(mapName)}`;
@@ -87,14 +90,38 @@ export async function getMXMap(mapName: string): Promise<{
 
     return {
       id: official.TrackID,
+      trackUid: official.TrackUID,
       lengthName: official.LengthName,
       surface: parseSurface(official.Tags),
       tagNames: parseTagNames(official.Tags),
-      wrTime: official.ReplayWRTime ?? null,
-      wrUsername: official.ReplayWRUsername ?? null,
+      mxWrTime: official.ReplayWRTime ?? null,
+      mxWrUsername: official.ReplayWRUsername ?? null,
     };
   } catch {
     return null;
+  }
+}
+
+export async function getTMIOWR(trackUid: string): Promise<{
+  wrTime: number | null;
+  wrUsername: string | null;
+}> {
+  try {
+    const url = `https://trackmania.io/api/leaderboard/map/${trackUid}?offset=0&length=1`;
+    const res = await fetch(url, {
+      headers: { "User-Agent": UA },
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return { wrTime: null, wrUsername: null };
+    const data = await res.json();
+    const top = data.tops?.[0];
+    if (!top) return { wrTime: null, wrUsername: null };
+    return {
+      wrTime: top.score ?? null,
+      wrUsername: top.player?.name ?? null,
+    };
+  } catch {
+    return { wrTime: null, wrUsername: null };
   }
 }
 

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
+import { SignInButton, useUser } from "@clerk/nextjs";
 
 function SupportModal({ onClose }: { onClose: () => void }) {
   return (
@@ -90,7 +90,15 @@ export default function Navbar() {
               </SignInButton>
             )}
             {isLoaded && isSignedIn && (
-              <UserButton appearance={{ elements: { avatarBox: "w-8 h-8" } }} />
+              <Link
+                href="/profile"
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-gray-400 transition-all hover:border-cyan-500/30 hover:text-cyan-400"
+                title="Profile"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+                </svg>
+              </Link>
             )}
           </div>
 

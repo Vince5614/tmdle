@@ -1,5 +1,5 @@
 import { getAllMapNames, parseMapName } from "@/data/campaigns";
-import { getMXMap, mxThumbnailUrl, formatTime } from "@/lib/mx";
+import { getMXMap, getTMIOWR, mxThumbnailUrl, formatTime } from "@/lib/mx";
 import { getDailyIndex, getDayNumber, getDateLabel } from "@/lib/seed";
 import type { CampaignMap, Clue, DailyChallenge } from "@/types/mapguessr";
 import MapGuessr from "./MapGuessr";
@@ -11,6 +11,7 @@ async function buildDailyChallenge(): Promise<DailyChallenge> {
 
   const parsed = parseMapName(todayName)!;
   const mx = await getMXMap(todayName);
+  const tmio = mx?.trackUid ? await getTMIOWR(mx.trackUid) : null;
   const surface = mx?.surface ?? "Unknown";
 
   const map: CampaignMap = {
@@ -22,8 +23,8 @@ async function buildDailyChallenge(): Promise<DailyChallenge> {
     thumbnailUrl: mx ? mxThumbnailUrl(mx.id) : null,
     lengthName: mx?.lengthName ?? null,
     tagNames: mx?.tagNames ?? [],
-    wrTime: mx?.wrTime ?? null,
-    wrUsername: mx?.wrUsername ?? null,
+    wrTime: tmio?.wrTime ?? mx?.mxWrTime ?? null,
+    wrUsername: tmio?.wrUsername ?? mx?.mxWrUsername ?? null,
   };
 
   const clues: Clue[] = [
@@ -71,7 +72,7 @@ async function buildDailyChallenge(): Promise<DailyChallenge> {
   };
 }
 
-export const revalidate = 3600;
+export const revalidate = 60;
 
 export default async function MapGuesserPage() {
   const challenge = await buildDailyChallenge();
