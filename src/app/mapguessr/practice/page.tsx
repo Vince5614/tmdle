@@ -93,5 +93,5 @@ export default async function PracticePage({
   const params = await searchParams;
   const seed = params.seed ? parseInt(params.seed, 10) : null;
   const challenge = await buildPracticeChallenge(isNaN(seed ?? NaN) ? null : seed);
-  return <MapGuessr challenge={challenge} mode="practice" />;
+  return <MapGuessr key={challenge.map.name} challenge={challenge} mode="practice" />;
 }
