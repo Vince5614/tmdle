@@ -31,8 +31,55 @@ export default function AdminPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Pre-warm state
+  const [warming, setWarming] = useState(false);
+  const [warmProgress, setWarmProgress] = useState<{ total: number; totalCached: number; errors: number } | null>(null);
+  const [uncachedView, setUncachedView] = useState<{ uncached: number; bySeason: Record<string, string[]> } | null>(null);
+
+  async function loadUncached() {
+    try {
+      const res = await fetch("/api/admin/uncached-maps");
+      if (!res.ok) return;
+      const data = await res.json();
+      setUncachedView({ uncached: data.uncached, bySeason: data.bySeason });
+    } catch {}
+  }
+
   const email = user?.emailAddresses[0]?.emailAddress;
   const isAdmin = isLoaded && email === ADMIN_EMAIL;
+
+  async function runPreWarm() {
+    setWarming(true);
+    setWarmProgress(null);
+    let totalErrors = 0;
+    let consecutiveNoProgress = 0;
+    try {
+      while (true) {
+        const res = await fetch("/api/admin/prewarm-maps", { method: "POST" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        totalErrors += data.errors ?? 0;
+        setWarmProgress({ total: data.total, totalCached: data.totalCached, errors: totalErrors });
+
+        if (!data.hasMore) break;
+
+        // If a batch made no progress, MX is probably rate-limiting us. Pause
+        // longer and try again — give up after 3 consecutive failed batches.
+        if (data.newlyCached === 0) {
+          consecutiveNoProgress++;
+          if (consecutiveNoProgress >= 3) break;
+          await new Promise((r) => setTimeout(r, 15_000));
+        } else {
+          consecutiveNoProgress = 0;
+          await new Promise((r) => setTimeout(r, 2_500));
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setWarming(false);
+    }
+  }
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -74,6 +121,76 @@ export default function AdminPage() {
       </div>
 
       {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
+
+      {/* MapGuessr 2.0 cache pre-warm */}
+      <div className="mb-8 rounded-xl border border-white/8 bg-[#111] p-5">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-xs uppercase tracking-widest text-gray-500" style={{ fontFamily: "var(--font-display)" }}>
+            MapGuessr 2.0 — MX Cache
+          </p>
+          <button
+            onClick={runPreWarm}
+            disabled={warming}
+            className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-xs font-semibold text-cyan-400 transition-all hover:border-cyan-400/50 hover:bg-cyan-400/15 disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            {warming ? "Caching…" : "Pre-warm all maps"}
+          </button>
+        </div>
+        <p className="text-xs text-gray-400">
+          Fetches MX data for every official campaign map and stores it in <code>map_metadata</code>. Run once after deploying — makes the /mapguessr dropdown instant.
+        </p>
+        {warmProgress && (
+          <div className="mt-3">
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/5">
+              <div
+                className="h-full bg-cyan-500 transition-all"
+                style={{ width: `${(warmProgress.totalCached / warmProgress.total) * 100}%` }}
+              />
+            </div>
+            <p className="mt-1.5 text-[10px] text-gray-500" style={{ fontFamily: "var(--font-display)" }}>
+              {warmProgress.totalCached} / {warmProgress.total} cached
+              {warmProgress.errors > 0 && ` · ${warmProgress.errors} errors`}
+              {!warming && warmProgress.totalCached === warmProgress.total && " · ✓ done"}
+            </p>
+          </div>
+        )}
+
+        <div className="mt-4 flex items-center gap-3">
+          <button
+            onClick={loadUncached}
+            className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            Show what&apos;s still uncached
+          </button>
+        </div>
+
+        {uncachedView && (
+          <div className="mt-3 rounded-lg border border-white/8 bg-black/30 p-3">
+            <p className="mb-2 text-[11px] text-gray-400">
+              <span className="font-semibold text-white" style={{ fontFamily: "var(--font-display)" }}>{uncachedView.uncached}</span> uncached, grouped by season:
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-[10px]">
+              {Object.entries(uncachedView.bySeason)
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([season, names]) => (
+                  <div key={season} className="flex flex-col">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-gray-300 font-semibold" style={{ fontFamily: "var(--font-display)" }}>{season}</span>
+                      <span className="text-gray-500">{names.length}/25</span>
+                    </div>
+                    {names.length <= 5 && (
+                      <p className="text-gray-600 ml-2 mt-0.5">
+                        Missing: {names.map((n) => `#${n.match(/(\d{2})$/)?.[1] ?? "??"}`).join(", ")}
+                      </p>
+                    )}
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       {stats && (
         <>

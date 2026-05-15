@@ -1,80 +1,31 @@
-import { getAllMapNames, parseMapName } from "@/data/campaigns";
-import { getMXMap, getTMIOWR, mxThumbnailUrl, formatTime } from "@/lib/mx";
+import { getAllMapNames } from "@/data/campaigns";
 import { getDailyIndex, getDayNumber, getDateLabel } from "@/lib/seed";
-import type { CampaignMap, Clue, DailyChallenge } from "@/types/mapguessr";
+import { buildEnrichedMap } from "@/lib/mapguessr2";
+import type { Challenge2 } from "@/types/mapguessr2";
 import MapGuessr from "./MapGuessr";
 
-async function buildDailyChallenge(): Promise<DailyChallenge> {
+export const dynamic = "force-dynamic";
+
+export default async function MapGuessrPage() {
   const allMapNames = getAllMapNames();
-  const todayIdx = getDailyIndex(allMapNames.length);
-  const todayName = allMapNames[todayIdx];
+  const dailyIdx = getDailyIndex(allMapNames.length);
+  const targetName = allMapNames[dailyIdx];
 
-  const parsed = parseMapName(todayName)!;
-  const mx = await getMXMap(todayName);
-  const tmio = mx?.trackUid ? await getTMIOWR(mx.trackUid) : null;
-  const surface = mx?.surface ?? "Unknown";
+  const target = await buildEnrichedMap(targetName);
+  if (!target) {
+    return (
+      <div className="flex justify-center items-center py-32">
+        <p className="text-gray-500 text-sm">Failed to load today&apos;s map. Try again later.</p>
+      </div>
+    );
+  }
 
-  const map: CampaignMap = {
-    name: todayName,
-    season: parsed.season,
-    number: parsed.number,
-    surface,
-    mxId: mx?.id ?? null,
-    thumbnailUrl: mx ? mxThumbnailUrl(mx.id) : null,
-    lengthName: mx?.lengthName ?? null,
-    tagNames: mx?.tagNames ?? [],
-    wrTime: tmio?.wrTime ?? mx?.mxWrTime ?? null,
-    wrUsername: tmio?.wrUsername ?? mx?.mxWrUsername ?? null,
-  };
-
-  const clues: Clue[] = [
-    {
-      type: "screenshot",
-      label: "Map Screenshot",
-      icon: "📸",
-      value: null,
-      mediaPath: map.thumbnailUrl,
-      available: map.thumbnailUrl !== null,
-    },
-    {
-      type: "season",
-      label: "Campaign Season",
-      icon: "📅",
-      value: map.season,
-      mediaPath: null,
-      available: true,
-    },
-    {
-      type: "wr",
-      label: "World Record",
-      icon: "🏆",
-      value: map.wrTime !== null ? formatTime(map.wrTime) : null,
-      subValue: map.wrUsername ? `by ${map.wrUsername}` : null,
-      mediaPath: null,
-      available: map.wrTime !== null,
-    },
-    {
-      type: "tags",
-      label: "Map Tags",
-      icon: "🏷️",
-      value: map.tagNames.length > 0 ? map.tagNames.join(",") : null,
-      mediaPath: null,
-      available: map.tagNames.length > 0,
-    },
-  ];
-
-  return {
-    map,
-    clues,
+  const challenge: Challenge2 = {
+    target,
     allMapNames,
     dayNumber: getDayNumber(),
     dateLabel: getDateLabel(),
   };
-}
 
-export const revalidate = 60;
-
-export default async function MapGuesserPage() {
-  const challenge = await buildDailyChallenge();
-  return <MapGuessr challenge={challenge} />;
+  return <MapGuessr challenge={challenge} mode="daily" />;
 }
