@@ -133,11 +133,34 @@ function cmpLength(guess: string, target: string): AttributeCell {
   return { value: guess, state: "absent", direction: dir };
 }
 
+// "Race" is on virtually every official campaign map, so it doesn't count
+// as a meaningful overlap — Tech and Reactor maps shouldn't show yellow just
+// because they're both tagged Race.
+const GENERIC_STYLE_TAGS = new Set(["Race"]);
+
 function cmpStyle(guess: EnrichedMap, target: EnrichedMap): AttributeCell {
   if (guess.primaryStyle === target.primaryStyle)
     return { value: guess.primaryStyle, state: "correct" };
-  const overlap = guess.styleTags.some((t) => target.styleTags.includes(t));
-  return { value: guess.primaryStyle, state: overlap ? "present" : "absent" };
+
+  const meaningful = (t: string) => !GENERIC_STYLE_TAGS.has(t) && !NON_STYLE.has(t);
+  const guessStyles = guess.styleTags.filter(meaningful);
+  const targetStyles = target.styleTags.filter(meaningful);
+  const overlap = guessStyles.filter((t) => targetStyles.includes(t));
+
+  if (overlap.length === 0) {
+    return { value: guess.primaryStyle, state: "absent" };
+  }
+
+  // Yellow: show the actual overlapping tag so the player knows what their
+  // guess shared with the target (not just their guess's primary style, which
+  // is confusing when the overlap is on a secondary tag).
+  // Pick the highest-priority overlap.
+  const priorityOf = (t: string) => {
+    const i = STYLE_PRIORITY.indexOf(t);
+    return i === -1 ? 999 : i;
+  };
+  const matched = overlap.sort((a, b) => priorityOf(a) - priorityOf(b))[0];
+  return { value: matched, state: "present" };
 }
 
 // ─── Build a comparison row ────────────────────────────────────────────────────
