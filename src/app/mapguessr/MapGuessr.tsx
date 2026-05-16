@@ -110,7 +110,10 @@ function MapThumb({
         style={{ width: dim.w, height: dim.h }}
       >
         {src ? (
-          <Image src={src} alt={alt} fill className="object-cover" sizes={`${dim.w}px`} />
+          // unoptimized: skip Vercel's image optimization quota. MX already
+          // serves pre-compressed JPEGs; optimization adds marginal value but
+          // counts against the per-month transformations limit.
+          <Image src={src} alt={alt} fill unoptimized className="object-cover" sizes={`${dim.w}px`} />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
             <span className="text-gray-600 text-xs">?</span>
@@ -125,7 +128,7 @@ function MapThumb({
             style={{ left: pos.x, top: pos.y, width: PREVIEW_W, height: PREVIEW_H }}
           >
             <div className="relative h-full w-full rounded-lg overflow-hidden border-2 border-white/30 shadow-[0_12px_40px_rgba(0,0,0,0.85)] bg-black">
-              <Image src={src} alt={alt} fill className="object-cover" sizes={`${PREVIEW_W}px`} />
+              <Image src={src} alt={alt} fill unoptimized className="object-cover" sizes={`${PREVIEW_W}px`} />
             </div>
           </div>,
           document.body
@@ -445,7 +448,7 @@ function WinCard({
 
       {target.thumbnailUrl && (
         <div className="relative mb-4 h-36 w-full overflow-hidden rounded-xl">
-          <Image src={target.thumbnailUrl} alt={target.name} fill className="object-cover" sizes="600px" />
+          <Image src={target.thumbnailUrl} alt={target.name} fill unoptimized className="object-cover" sizes="600px" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <div className="absolute bottom-2.5 left-3 flex flex-wrap gap-1.5">
             <span className="rounded-full bg-black/70 px-2.5 py-0.5 text-[10px] text-gray-200 backdrop-blur-sm">

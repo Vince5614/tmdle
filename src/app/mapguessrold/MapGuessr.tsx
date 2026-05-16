@@ -214,7 +214,7 @@ function ClueCard({ clue, revealed, className = "" }: { clue: Clue; revealed: bo
           </span>
         </div>
         <div className="relative w-full aspect-video flex-1">
-          <Image src={clue.mediaPath} alt="Map screenshot" fill className="object-cover" />
+          <Image src={clue.mediaPath} alt="Map screenshot" fill unoptimized className="object-cover" />
         </div>
       </div>
     );
@@ -408,7 +408,7 @@ function ResultCard({ won, map, clueIndex, dayNumber, mode, isSignedIn }: {
 
       {map.thumbnailUrl && (
         <div className="relative mb-4 h-36 w-full overflow-hidden rounded-xl">
-          <Image src={map.thumbnailUrl} alt={map.name} fill className="object-cover" />
+          <Image src={map.thumbnailUrl} alt={map.name} fill unoptimized className="object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
           <div className="absolute bottom-2 left-3 flex gap-2">
             {map.surface !== "Unknown" && (
