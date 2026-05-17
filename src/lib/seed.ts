@@ -20,6 +20,25 @@ function todayInZone(): { year: number; month: number; day: number } {
 }
 
 /**
+ * Mix the bits of a 32-bit integer so consecutive inputs map to wildly
+ * different outputs. Without this, `getDailyIndex` would just walk by +1
+ * each day — because the raw YYYYMMDD seed increments by 1 daily, and the
+ * map list is sorted by season, so we'd play every season's maps in order.
+ *
+ * This is the well-known "splitmix32" finalizer used by xoshiro/Murmur3.
+ */
+function mix32(n: number): number {
+  let h = n | 0;
+  h = Math.imul(h, 2654435761);
+  h ^= h >>> 16;
+  h = Math.imul(h, 2246822507);
+  h ^= h >>> 13;
+  h = Math.imul(h, 3266489909);
+  h ^= h >>> 16;
+  return h >>> 0;
+}
+
+/**
  * Returns a zero-based index for today's daily challenge.
  * Same value for all users on the same European calendar day.
  * Changes at midnight in Europe/Brussels (CET/CEST).
@@ -27,7 +46,7 @@ function todayInZone(): { year: number; month: number; day: number } {
 export function getDailyIndex(poolSize: number): number {
   const { year, month, day } = todayInZone();
   const seed = year * 10000 + month * 100 + day;
-  return seed % poolSize;
+  return mix32(seed) % poolSize;
 }
 
 /**
