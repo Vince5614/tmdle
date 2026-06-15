@@ -89,13 +89,18 @@ export default function HigherOrLower({
 }: {
   deck: WrlMap[]; dayNumber: number; mode: "daily" | "practice";
 }) {
-  const { isSignedIn } = useUser();
+  const { isSignedIn, isLoaded } = useUser();
   const [round, setRound] = useState(0);
   const [results, setResults] = useState<boolean[]>([]);
   const [phase, setPhase] = useState<"guess" | "verdict" | "done">("guess");
   const [copied, setCopied] = useState(false);
   const [animTime, setAnimTime] = useState<number | null>(null);
+  const [alreadyPlayed, setAlreadyPlayed] = useState(false);
+  // Daily is one-and-done: block play until we've checked for a prior result
+  // (from Supabase when signed in, localStorage when guest). Practice is free.
+  const [checking, setChecking] = useState(mode === "daily");
   const posted = useRef(false);
+  const restoredRef = useRef(false);
 
   const L = deck[round];
   const R = deck[round + 1];
@@ -135,10 +140,61 @@ export default function HigherOrLower({
     setPhase("guess");
   }
 
-  /* post result once on completion (fire and forget, errors non-fatal) */
+  /* Restore a prior daily result so the day can't be replayed. Signed-in users
+     get their canonical row from Supabase; guests get this browser's saved run.
+     Either way we mark posted so the restored result is never re-recorded. */
+  useEffect(() => {
+    if (mode !== "daily" || !isLoaded || restoredRef.current) return;
+    restoredRef.current = true;
+
+    async function restore() {
+      let prior: boolean[] | null = null;
+      // Local copy first: it's written synchronously on completion for every
+      // daily (guest or signed-in), so it locks instantly and is immune to the
+      // POST-vs-reload race. The DB is only needed when this browser has no
+      // local copy (e.g. a signed-in user returning on another device).
+      try {
+        const saved = localStorage.getItem(`hol_v1_${dayNumber}`);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed.results)) prior = parsed.results.map(Boolean);
+        }
+      } catch {}
+
+      if (!prior && isSignedIn) {
+        try {
+          const res = await fetch(`/api/results?game=wrorlower`);
+          if (res.ok) {
+            const data = await res.json();
+            const today = data.find((r: { day_number: number }) => r.day_number === dayNumber);
+            if (today && Array.isArray(today.wrong_guesses)) {
+              prior = today.wrong_guesses.map((s: string) => s === "1");
+            }
+          }
+        } catch {}
+      }
+
+      if (prior && prior.length > 0) {
+        setResults(prior);
+        setPhase("done");
+        setAlreadyPlayed(true);
+        posted.current = true; // already recorded — don't re-post
+      }
+      setChecking(false);
+    }
+    restore();
+  }, [isLoaded, isSignedIn, mode, dayNumber]);
+
+  /* Post + persist once on completion (fire and forget, errors non-fatal).
+     Gated on Clerk being loaded so a signed-in finisher is never misfiled as a
+     guest, and on the prior-play check so a restored result isn't re-posted. */
   useEffect(() => {
     if (phase !== "done" || posted.current) return;
+    if (!isLoaded) return;                       // wait for known identity
+    if (mode === "daily" && checking) return;    // wait for prior-play check
+    if (mode === "practice" && !isSignedIn) return; // gated upstream; never post anon practice
     posted.current = true;
+
     const finalScore = results.filter(Boolean).length;
     const body = JSON.stringify({
       game: mode === "daily" ? "wrorlower" : "wrorlower-practice",
@@ -147,10 +203,18 @@ export default function HigherOrLower({
       clue_index: finalScore,
       wrong_guesses: results.map((r) => (r ? "1" : "0")),
     });
+
+    // Save the daily locally so a reload shows the locked result — and so a
+    // guest (no account to dedupe against) counts only once per day.
+    if (mode === "daily") {
+      try {
+        localStorage.setItem(`hol_v1_${dayNumber}`, JSON.stringify({ results, score: finalScore }));
+      } catch {}
+    }
+
     const url = isSignedIn ? "/api/results" : "/api/results/guest";
-    if (mode === "practice" && !isSignedIn) return; // practice requires login, gated upstream
     fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body }).catch(() => {});
-  }, [phase, results, isSignedIn, mode, dayNumber]);
+  }, [phase, results, isSignedIn, isLoaded, checking, mode, dayNumber]);
 
   const shareText = useMemo(() => {
     const grid = results.map((r) => (r ? "🟩" : "🟥")).join("");
@@ -168,10 +232,19 @@ export default function HigherOrLower({
 
   const pct = R ? crowdPct(R.uid) : 0;
 
+  // Daily: don't render the board until we know whether today was already played
+  if (mode === "daily" && checking) {
+    return (
+      <div className="border border-[#383228] bg-[#1d1a15] p-7">
+        <span className="wrl-label">Loading today&apos;s deck…</span>
+      </div>
+    );
+  }
+
   if (phase === "done") {
     return (
       <div className="border border-[#383228] bg-[#1d1a15] p-7">
-        <span className="wrl-label">Final score</span>
+        <span className="wrl-label">{alreadyPlayed ? "Already played today" : "Final score"}</span>
         <div className="wrl-condensed text-[64px] leading-none text-[#eae3d2]">
           {score}<span className="text-2xl text-[#9c9483]"> / {ROUNDS}</span>
         </div>

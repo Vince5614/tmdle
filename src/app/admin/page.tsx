@@ -37,9 +37,9 @@ function GameSummary({ title, stats }: { title: string; stats: Stats | null }) {
       <p className="wrl-label mb-3">{title}</p>
       <div className="grid grid-cols-3 gap-2 text-center">
         {[
-          { label: "Plays", value: stats?.totalAllTime ?? "—" },
-          { label: "Signed in", value: signedIn },
-          { label: "Guests", value: guests },
+          { label: "Total rows", value: stats?.totalAllTime ?? "—" },
+          { label: "Signed-in", value: signedIn },
+          { label: "Guest plays", value: guests },
         ].map(({ label, value }) => (
           <div key={label}>
             <p className="wrl-mono text-2xl font-semibold text-[#eae3d2] tabular-nums">{value}</p>
@@ -192,6 +192,10 @@ export default function AdminPage() {
         <GameSummary title="MapGuessr" stats={mg} />
         <GameSummary title="Higher or Lower" stats={hol} />
       </div>
+      <p className="mb-6 text-[10px] text-[#6b6557] leading-relaxed" style={MONO}>
+        Signed-in is deduplicated to one row per user per day; guest plays are not deduplicated,
+        so one guest replaying counts more than once. Treat guest numbers as plays, not people.
+      </p>
 
       {/* Day-by-day comparison table */}
       <div className="mb-6 border border-[#383228] bg-[#1d1a15] overflow-x-auto">
@@ -232,8 +236,8 @@ export default function AdminPage() {
             <p className="px-5 py-6 text-sm text-[#6b6557]">No plays recorded yet.</p>
           )}
         </div>
-        <p className="px-5 py-2 text-[10px] text-[#6b6557] border-t border-[#383228]" style={MONO}>
-          Plays = total, ·Ng = guest share · MapGuessr avg = wrong guesses before solving · HoL avg = score out of 10
+        <p className="px-5 py-2 text-[10px] text-[#6b6557] border-t border-[#383228] leading-relaxed" style={MONO}>
+          Plays = total rows, ·Ng = of which guest plays · MapGuessr only records solved games, so its win % sits near 100% · MapGuessr avg = wrong guesses before solving · HoL avg = score out of 10
         </p>
       </div>
 
