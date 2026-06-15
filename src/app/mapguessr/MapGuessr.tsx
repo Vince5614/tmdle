@@ -11,26 +11,26 @@ import type { Challenge2, GuessRow, EnrichedMap, CellState, AttributeCell } from
 // ─── Cell ─────────────────────────────────────────────────────────────────────
 
 const BG: Record<CellState, string> = {
-  correct: "bg-green-500",
-  present: "bg-yellow-400",
-  absent:  "bg-red-600",
+  correct: "bg-[#6fbf73]",
+  present: "bg-[#d9a13b]",
+  absent:  "bg-[#e0492e]",
 };
 const FG: Record<CellState, string> = {
-  correct: "text-white",
-  present: "text-black",
-  absent:  "text-white",
+  correct: "text-[#15130f]",
+  present: "text-[#15130f]",
+  absent:  "text-[#15130f]",
 };
 
 function Cell({ cell, wide }: { cell: AttributeCell; wide?: boolean }) {
   return (
     <div
       className={`
-        flex flex-col items-center justify-center rounded-lg px-1 py-1 text-center
+        flex flex-col items-center justify-center px-1 py-1 text-center
         font-semibold text-xs leading-tight select-none transition-all duration-300
         ${wide ? "min-w-[90px]" : "min-w-[68px]"} h-[58px]
         ${BG[cell.state]} ${FG[cell.state]}
       `}
-      style={{ fontFamily: "var(--font-display)" }}
+      style={{ fontFamily: "var(--font-condensed)" }}
     >
       <span className="break-words max-w-full">{cell.value || "—"}</span>
       {cell.direction && (
@@ -106,7 +106,7 @@ function MapThumb({
         ref={ref}
         onMouseEnter={handleEnter}
         onMouseLeave={() => setHover(false)}
-        className="relative shrink-0 rounded-md overflow-hidden bg-white/5 cursor-zoom-in"
+        className="relative shrink-0 overflow-hidden border border-[#383228] bg-[#242019] cursor-zoom-in"
         style={{ width: dim.w, height: dim.h }}
       >
         {src ? (
@@ -116,7 +116,7 @@ function MapThumb({
           <Image src={src} alt={alt} fill unoptimized className="object-cover" sizes={`${dim.w}px`} />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
-            <span className="text-gray-600 text-xs">?</span>
+            <span className="text-[#6b6557] text-xs">?</span>
           </div>
         )}
       </div>
@@ -127,7 +127,7 @@ function MapThumb({
             className="fixed z-[1000] pointer-events-none"
             style={{ left: pos.x, top: pos.y, width: PREVIEW_W, height: PREVIEW_H }}
           >
-            <div className="relative h-full w-full rounded-lg overflow-hidden border-2 border-white/30 shadow-[0_12px_40px_rgba(0,0,0,0.85)] bg-black">
+            <div className="relative h-full w-full overflow-hidden border border-[#9c9483] shadow-[0_12px_40px_rgba(0,0,0,0.85)] bg-[#15130f]">
               <Image src={src} alt={alt} fill unoptimized className="object-cover" sizes={`${PREVIEW_W}px`} />
             </div>
           </div>,
@@ -151,18 +151,18 @@ const COLUMNS = [
 
 function ColumnHeaders() {
   return (
-    <div className="flex items-center gap-2 pb-2.5 min-w-max border-b border-white/8">
+    <div className="flex items-center gap-2 pb-2.5 min-w-max border-b border-[#383228]">
       <div
-        className="min-w-[200px] text-[10px] uppercase tracking-widest text-gray-500"
-        style={{ fontFamily: "var(--font-display)" }}
+        className="min-w-[200px] text-[10px] uppercase tracking-widest text-[#6b6557]"
+        style={{ fontFamily: "var(--font-mono)" }}
       >
         Map
       </div>
       {COLUMNS.map(({ label, wide }) => (
         <div
           key={label}
-          className={`text-center text-[10px] uppercase tracking-widest text-gray-500 ${wide ? "min-w-[90px]" : "min-w-[68px]"}`}
-          style={{ fontFamily: "var(--font-display)" }}
+          className={`text-center text-[10px] uppercase tracking-widest text-[#6b6557] ${wide ? "min-w-[90px]" : "min-w-[68px]"}`}
+          style={{ fontFamily: "var(--font-mono)" }}
         >
           {label}
         </div>
@@ -175,13 +175,13 @@ function ColumnHeaders() {
 
 function GuessRowView({ row, isNewest }: { row: GuessRow; isNewest: boolean }) {
   return (
-    <div className={`flex items-center gap-2 py-2.5 min-w-max border-b border-white/5 last:border-0 ${isNewest ? "animate-slide-in" : ""}`}>
+    <div className={`flex items-center gap-2 py-2.5 min-w-max border-b border-[#383228]/60 last:border-0 ${isNewest ? "animate-slide-in" : ""}`}>
       {/* Thumbnail + name */}
       <div className="flex items-center gap-2.5 min-w-[200px] max-w-[200px]">
         <MapThumb src={row.thumbnailUrl} alt={row.mapName} size="md" />
         <span
-          className={`text-[11px] leading-tight line-clamp-2 ${row.correct ? "text-green-400 font-semibold" : "text-gray-300"}`}
-          style={{ fontFamily: "var(--font-display)" }}
+          className={`text-[11px] leading-tight line-clamp-2 ${row.correct ? "text-[#6fbf73] font-semibold" : "text-[#eae3d2]"}`}
+          style={{ fontFamily: "var(--font-condensed)" }}
         >
           {row.mapName}
         </span>
@@ -269,25 +269,24 @@ function SearchInput({
               if (e.key === "Escape") setOpen(false);
             }}
             placeholder={loading ? "Fetching map data…" : "Type a campaign map name…"}
-            className="w-full rounded-xl border border-white/10 bg-[#111] px-4 py-3 text-sm text-white placeholder-gray-500 outline-none transition-colors focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 disabled:opacity-40"
+            className="w-full border border-[#383228] bg-[#1d1a15] px-4 py-3 text-sm text-[#eae3d2] placeholder-[#6b6557] outline-none transition-colors focus:border-[#ff5800] disabled:opacity-40"
           />
         </div>
 
         <button
           disabled={disabled || loading || !isValid}
           onClick={() => onSubmit(value.trim())}
-          className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-5 py-3 text-sm font-semibold text-cyan-400 transition-all hover:border-cyan-400/50 hover:bg-cyan-400/15 disabled:cursor-not-allowed disabled:opacity-30"
-          style={{ fontFamily: "var(--font-display)" }}
+          className="wrl-btn-primary disabled:cursor-not-allowed disabled:opacity-30"
         >
           {loading ? (
-            <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-cyan-400/20 border-t-cyan-400" />
+            <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-[#15130f]/25 border-t-[#15130f]" />
           ) : "Guess"}
         </button>
       </div>
 
       {/* In-flow dropdown: pushes content below it down */}
       {open && filtered.length > 0 && (
-        <div className="rounded-xl border border-white/10 bg-[#1a1a1a] shadow-lg overflow-hidden">
+        <div className="border border-[#383228] bg-[#1d1a15] overflow-hidden">
           {filtered.map((name) => {
             const guessed = guessedNames.has(name);
             const data = mapCache.get(name);
@@ -302,7 +301,7 @@ function SearchInput({
             );
           })}
           {value.length > 0 && filtered.length === 8 && (
-            <div className="px-4 py-2 text-[10px] uppercase tracking-widest text-gray-600 border-t border-white/5 text-center" style={{ fontFamily: "var(--font-display)" }}>
+            <div className="px-4 py-2 text-[10px] uppercase tracking-widest text-[#6b6557] border-t border-[#383228]/60 text-center" style={{ fontFamily: "var(--font-mono)" }}>
               Showing 8 — keep typing to narrow
             </div>
           )}
@@ -359,10 +358,10 @@ function DropdownItem({
     <button
       onClick={onSelect}
       disabled={guessed}
-      className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors border-b border-white/5 last:border-0 ${
+      className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors border-b border-[#383228]/60 last:border-0 ${
         guessed
           ? "cursor-default opacity-40"
-          : "hover:bg-white/5 cursor-pointer"
+          : "hover:bg-[#242019] cursor-pointer"
       }`}
     >
       <MapThumb src={data?.thumbnailUrl ?? null} alt={name} size="sm" />
@@ -370,23 +369,23 @@ function DropdownItem({
       <div className="flex-1 min-w-0">
         <p
           className={`text-sm leading-tight ${
-            guessed ? "text-gray-600 line-through" : "text-white"
+            guessed ? "text-[#6b6557] line-through" : "text-[#eae3d2]"
           }`}
-          style={{ fontFamily: "var(--font-display)" }}
+          style={{ fontFamily: "var(--font-condensed)" }}
         >
           {name}
         </p>
 
         <p
-          className="text-[10px] text-gray-400 mt-0.5 truncate flex items-center gap-1"
-          style={{ fontFamily: "var(--font-display)" }}
+          className="text-[10px] text-[#9c9483] mt-0.5 truncate flex items-center gap-1"
+          style={{ fontFamily: "var(--font-mono)" }}
         >
           <span>{fullLine ?? quickLine}</span>
           {data === undefined && (
-            <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-cyan-500/50" />
+            <span className="inline-block h-2 w-2 animate-pulse bg-[#ff5800]/60" />
           )}
           {data === null && (
-            <span className="text-gray-600 text-[9px]">· MX offline</span>
+            <span className="text-[#6b6557] text-[9px]">· MX offline</span>
           )}
         </p>
       </div>
@@ -438,45 +437,45 @@ function WinCard({
   }
 
   return (
-    <div className="rounded-2xl border border-green-500/25 bg-green-500/5 p-6 mb-6">
-      <p className="text-xs uppercase tracking-widest text-green-400 mb-1" style={{ fontFamily: "var(--font-display)" }}>
+    <div className="border border-[#6fbf73]/40 bg-[#6fbf73]/5 p-6 mb-6">
+      <p className="text-xs uppercase tracking-widest text-[#6fbf73] mb-1" style={{ fontFamily: "var(--font-mono)" }}>
         Well played! 🎉
       </p>
-      <h2 className="text-xl font-semibold text-white mb-4" style={{ fontFamily: "var(--font-display)" }}>
+      <h2 className="text-xl font-semibold text-[#eae3d2] mb-4" style={{ fontFamily: "var(--font-display)" }}>
         {target.name}
       </h2>
 
       {target.thumbnailUrl && (
-        <div className="relative mb-4 h-36 w-full overflow-hidden rounded-xl">
+        <div className="relative mb-4 h-36 w-full overflow-hidden border border-[#383228]">
           <Image src={target.thumbnailUrl} alt={target.name} fill unoptimized className="object-cover" sizes="600px" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <div className="absolute bottom-2.5 left-3 flex flex-wrap gap-1.5">
-            <span className="rounded-full bg-black/70 px-2.5 py-0.5 text-[10px] text-gray-200 backdrop-blur-sm">
+            <span className="bg-[#15130f]/85 px-2.5 py-0.5 text-[10px] text-[#eae3d2]">
               {target.seasonName} {target.year}
             </span>
-            <span className="rounded-full bg-black/70 px-2.5 py-0.5 text-[10px] text-gray-200 backdrop-blur-sm">
+            <span className="bg-[#15130f]/85 px-2.5 py-0.5 text-[10px] text-[#eae3d2]">
               Map #{target.number}
             </span>
             {target.carType !== "Stadium" && (
-              <span className="rounded-full bg-black/70 px-2.5 py-0.5 text-[10px] text-yellow-300 backdrop-blur-sm">
+              <span className="bg-[#15130f]/85 px-2.5 py-0.5 text-[10px] text-[#d9a13b]">
                 {target.carType} Car
               </span>
             )}
-            <span className="rounded-full bg-black/70 px-2.5 py-0.5 text-[10px] text-cyan-300 backdrop-blur-sm">
+            <span className="bg-[#15130f]/85 px-2.5 py-0.5 text-[10px] text-[#ff5800]">
               {target.primaryStyle}
             </span>
           </div>
         </div>
       )}
 
-      <p className="text-sm text-gray-300 mb-2">
+      <p className="text-sm text-[#9c9483] mb-2">
         Identified in{" "}
-        <span className="font-semibold text-white" style={{ fontFamily: "var(--font-display)" }}>
+        <span className="font-semibold text-[#eae3d2]" style={{ fontFamily: "var(--font-mono)" }}>
           {guessCount} guess{guessCount !== 1 ? "es" : ""}
         </span>
       </p>
 
-      <div className="mb-5 rounded-lg border border-white/8 bg-black/30 px-3 py-2 text-sm leading-snug tracking-wider">
+      <div className="mb-5 border border-[#383228] bg-[#15130f]/60 px-3 py-2 text-sm leading-snug tracking-wider">
         {grid.split("\n").map((line, i) => (
           <div key={i}>{line}</div>
         ))}
@@ -484,11 +483,7 @@ function WinCard({
 
       <div className="flex flex-col gap-2">
         {mode === "daily" && (
-          <button
-            onClick={copyShare}
-            className="w-full rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
+          <button onClick={copyShare} className="wrl-btn-primary w-full">
             {copied ? "✓ Copied!" : "📋 Share Result"}
           </button>
         )}
@@ -498,25 +493,20 @@ function WinCard({
             href={`https://trackmania.exchange/maps/${target.mxId}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full rounded-xl border border-white/10 bg-white/5 py-3 text-sm text-gray-300 transition-colors hover:bg-white/10 hover:text-white flex items-center justify-center gap-2"
-            style={{ fontFamily: "var(--font-display)" }}
+            className="wrl-btn w-full flex items-center justify-center gap-2"
           >
             🗺️ View on TrackMania Exchange
           </a>
         )}
 
-        <button
-          onClick={onNewPractice}
-          className="w-full rounded-xl border border-white/10 bg-white/5 py-3 text-sm text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
+        <button onClick={onNewPractice} className="wrl-btn w-full">
           🎮 {mode === "practice" ? "New practice round" : "Try practice mode"}
         </button>
 
         <button
           onClick={() => router.push("/")}
-          className="w-full rounded-xl border border-white/8 py-3 text-sm text-gray-500 transition-colors hover:text-gray-300"
-          style={{ fontFamily: "var(--font-display)" }}
+          className="w-full py-3 text-sm text-[#6b6557] transition-colors hover:text-[#eae3d2]"
+          style={{ fontFamily: "var(--font-mono)" }}
         >
           🕹️ More games
         </button>
@@ -529,17 +519,17 @@ function WinCard({
 
 function Legend() {
   return (
-    <div className="mb-5 flex flex-wrap gap-4 text-xs text-gray-400">
+    <div className="mb-5 flex flex-wrap gap-4 text-xs text-[#9c9483]">
       <span className="flex items-center gap-1.5">
-        <span className="inline-block h-3 w-3 rounded-sm bg-green-500" />
+        <span className="inline-block h-3 w-3 bg-[#6fbf73]" />
         Exact match
       </span>
       <span className="flex items-center gap-1.5">
-        <span className="inline-block h-3 w-3 rounded-sm bg-yellow-400" />
+        <span className="inline-block h-3 w-3 bg-[#d9a13b]" />
         Close / partial match
       </span>
       <span className="flex items-center gap-1.5">
-        <span className="inline-block h-3 w-3 rounded-sm bg-red-600" />
+        <span className="inline-block h-3 w-3 bg-[#e0492e]" />
         Wrong (↑↓ = direction)
       </span>
     </div>
@@ -554,12 +544,12 @@ function HowItWorks() {
     <div className="mb-6">
       <button
         onClick={() => setOpen(!open)}
-        className="text-xs text-gray-500 hover:text-gray-300 transition-colors flex items-center gap-1"
+        className="text-xs text-[#6b6557] hover:text-[#9c9483] transition-colors flex items-center gap-1"
       >
         {open ? "▲" : "▼"} How each column works
       </button>
       {open && (
-        <div className="mt-3 rounded-xl border border-white/8 bg-[#0d0d0d] p-4 text-xs text-gray-400 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+        <div className="mt-3 border border-[#383228] bg-[#1d1a15] p-4 text-xs text-[#9c9483] grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
           {[
             ["Season", "Winter / Spring / Summer / Fall — exact only"],
             ["Year", "2020–2025 — yellow if ±1 year off"],
@@ -570,7 +560,7 @@ function HowItWorks() {
             ["Length", "MX length bucket — yellow if within ±2 buckets"],
           ].map(([col, desc]) => (
             <div key={col} className="flex gap-2">
-              <span className="text-gray-300 font-semibold shrink-0" style={{ fontFamily: "var(--font-display)" }}>{col}:</span>
+              <span className="text-[#eae3d2] font-semibold shrink-0" style={{ fontFamily: "var(--font-mono)" }}>{col}:</span>
               <span>{desc}</span>
             </div>
           ))}
@@ -818,9 +808,9 @@ export default function MapGuessr({
     <div className="mx-auto max-w-5xl px-4 py-8">
       {/* Practice banner */}
       {mode === "practice" && (
-        <div className="mb-5 flex items-center gap-2 rounded-xl border border-yellow-500/20 bg-yellow-500/5 px-4 py-2.5">
-          <span className="text-yellow-400 text-sm">🎮</span>
-          <p className="text-xs text-yellow-400" style={{ fontFamily: "var(--font-display)" }}>
+        <div className="mb-5 flex items-center gap-2 border border-[#d9a13b]/40 bg-[#d9a13b]/5 px-4 py-2.5">
+          <span className="text-[#d9a13b] text-sm">🎮</span>
+          <p className="text-xs text-[#d9a13b]" style={{ fontFamily: "var(--font-mono)" }}>
             Practice mode — results are not saved
           </p>
         </div>
@@ -828,14 +818,13 @@ export default function MapGuessr({
 
       {/* Header */}
       <div className="mb-6">
-        <p className="text-xs uppercase tracking-[0.2em] text-gray-400 mb-1" style={{ fontFamily: "var(--font-display)" }}>
+        <p className="text-xs uppercase tracking-[0.2em] text-[#6b6557] mb-1" style={{ fontFamily: "var(--font-mono)" }}>
           {mode === "practice" ? "Practice Round" : `${dateLabel} · Day #${dayNumber}`}
         </p>
-        <h1 className="text-4xl text-white sm:text-5xl" style={{ fontFamily: "var(--font-display)" }}>
-          Map
-          <span className="bg-gradient-to-r from-cyan-300 to-blue-500 bg-clip-text text-transparent">Guessr</span>
+        <h1 className="text-4xl text-[#eae3d2] sm:text-5xl" style={{ fontFamily: "var(--font-display)" }}>
+          Map<span className="text-[#ff5800]">Guessr</span>
         </h1>
-        <p className="mt-2 text-sm text-gray-300">
+        <p className="mt-2 text-sm text-[#9c9483]">
           Each guess reveals how that map compares to the hidden target. Identify today&apos;s official campaign map.
         </p>
       </div>
@@ -856,11 +845,11 @@ export default function MapGuessr({
 
       {/* Guest sign-in nudge — daily mode, before they finish */}
       {mode === "daily" && isLoaded && !isSignedIn && !nudgeDismissed && phase === "playing" && (
-        <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-white/8 bg-white/[0.03] px-4 py-2.5">
-          <p className="text-xs text-gray-400" style={{ fontFamily: "var(--font-display)" }}>
+        <div className="mb-4 flex items-center justify-between gap-3 border border-[#383228] bg-[#1d1a15] px-4 py-2.5">
+          <p className="text-xs text-[#9c9483]" style={{ fontFamily: "var(--font-mono)" }}>
             💾{" "}
             <SignInButton mode="modal">
-              <button className="text-cyan-400 hover:text-cyan-300 font-semibold transition-colors">
+              <button className="text-[#ff5800] hover:text-[#eae3d2] font-semibold transition-colors">
                 Sign in
               </button>
             </SignInButton>{" "}
@@ -868,7 +857,7 @@ export default function MapGuessr({
           </p>
           <button
             onClick={() => setNudgeDismissed(true)}
-            className="text-gray-600 hover:text-gray-400 transition-colors text-sm shrink-0"
+            className="text-[#6b6557] hover:text-[#9c9483] transition-colors text-sm shrink-0"
           >
             ✕
           </button>
@@ -888,14 +877,10 @@ export default function MapGuessr({
           mapCache={mapCache}
           fetchMapData={fetchMapData}
         />
-        {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
+        {error && <p className="mt-2 text-xs text-[#e0492e]">{error}</p>}
         {phase !== "playing" && (
           <div className="mt-3 flex gap-2">
-            <button
-              onClick={handleNewPractice}
-              className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
-              style={{ fontFamily: "var(--font-display)" }}
-            >
+            <button onClick={handleNewPractice} className="wrl-btn">
               🎮 {mode === "practice" ? "New practice round" : "Try practice mode"}
             </button>
           </div>
@@ -903,7 +888,7 @@ export default function MapGuessr({
       </div>
 
       {rows.length > 0 && (
-        <p className="mt-4 mb-2 text-xs text-gray-600" style={{ fontFamily: "var(--font-display)" }}>
+        <p className="mt-4 mb-2 text-xs text-[#6b6557]" style={{ fontFamily: "var(--font-mono)" }}>
           {rows.length} guess{rows.length !== 1 ? "es" : ""} made
           {phase === "playing" && " · Keep going!"}
         </p>
@@ -911,7 +896,7 @@ export default function MapGuessr({
 
       {/* Comparison table */}
       {rows.length > 0 && (
-        <div className="mt-1 overflow-x-auto rounded-xl border border-white/8 bg-[#0d0d0d] px-4 pt-4 pb-2">
+        <div className="mt-1 overflow-x-auto border border-[#383228] bg-[#1d1a15] px-4 pt-4 pb-2">
           <ColumnHeaders />
           <div className="flex flex-col">
             {rows.map((row, i) => (
@@ -926,9 +911,9 @@ export default function MapGuessr({
       )}
 
       {rows.length === 0 && phase === "playing" && (
-        <div className="mt-4 rounded-xl border border-dashed border-white/8 py-14 text-center">
-          <p className="text-gray-600 text-sm">Make your first guess above</p>
-          <p className="text-gray-700 text-xs mt-1.5">
+        <div className="mt-4 border border-dashed border-[#383228] py-14 text-center">
+          <p className="text-[#9c9483] text-sm">Make your first guess above</p>
+          <p className="text-[#6b6557] text-xs mt-1.5">
             Pool: {allMapNames.length} official campaign maps
           </p>
         </div>

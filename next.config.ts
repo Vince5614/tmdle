@@ -1,6 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      // The game launched as "WR or Lower" at /wrorlower before being renamed
+      // to "Higher or Lower". DB game keys still use "wrorlower"; only the
+      // public route moved.
+      { source: "/wrorlower/:path*", destination: "/higherorlower/:path*", permanent: true },
+      { source: "/admin/wrorlower", destination: "/admin", permanent: false },
+    ];
+  },
   images: {
     // Global safety net: bypass Vercel's image optimization service entirely
     // so we never burn through the monthly transformations quota. Every

@@ -6,28 +6,19 @@ import { SignInButton, useUser } from "@clerk/nextjs";
 
 function SupportModal({ onClose }: { onClose: () => void }) {
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm px-4"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-xs rounded-2xl border border-white/10 bg-[#111] p-7 text-center"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="mb-4 flex h-14 w-14 mx-auto items-center justify-center rounded-2xl bg-cyan-500/10 border border-cyan-500/20">
-          <span className="text-2xl">🎮</span>
-        </div>
-        <h2 className="text-lg font-bold text-white mb-1" style={{ fontFamily: "var(--font-display)" }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-4" onClick={onClose}>
+      <div className="w-full max-w-xs border border-[#383228] bg-[#1d1a15] p-7 text-center" onClick={(e) => e.stopPropagation()}>
+        <h2 className="mb-1 text-lg text-[#eae3d2]" style={{ fontFamily: "var(--font-display)" }}>
           Made by chilly
         </h2>
-        <p className="text-xs text-gray-500 mb-5 leading-relaxed">
+        <p className="mb-5 text-xs leading-relaxed text-[#9c9483]">
           Trackmania streamer, speedrunner, and creator of TMDLE — a daily games hub for the TM community.
         </p>
         <a
           href="https://www.twitch.tv/chilly7383"
           target="_blank"
           rel="noopener noreferrer"
-          className="mb-3 flex items-center justify-center gap-2 w-full rounded-xl py-3 text-sm font-semibold transition-all"
+          className="mb-3 flex w-full items-center justify-center gap-2 py-3 text-sm font-semibold transition-all"
           style={{ backgroundColor: "#9146ff", color: "#fff", fontFamily: "var(--font-display)" }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -35,12 +26,7 @@ function SupportModal({ onClose }: { onClose: () => void }) {
           </svg>
           Follow on Twitch
         </a>
-        <button
-          onClick={onClose}
-          className="w-full rounded-xl border border-white/10 py-2.5 text-xs text-gray-500 transition-colors hover:text-gray-300"
-        >
-          Close
-        </button>
+        <button onClick={onClose} className="wrl-btn w-full">Close</button>
       </div>
     </div>
   );
@@ -51,43 +37,41 @@ export default function Navbar() {
   const [supportOpen, setSupportOpen] = useState(false);
   const { isSignedIn, isLoaded } = useUser();
 
+  const links = [
+    { href: "/", label: "Games" },
+    { href: "/mapguessr", label: "MapGuessr" },
+    { href: "/higherorlower", label: "Higher or Lower" },
+    { href: "/profile", label: "Profile" },
+  ];
+
   return (
     <>
       {supportOpen && <SupportModal onClose={() => setSupportOpen(false)} />}
 
-      <nav className="sticky top-0 z-40 border-b border-white/10 bg-[#0f0f0f]/90 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          {/* Logo */}
+      <nav className="sticky top-0 z-40 border-b border-[#383228] bg-[#15130f]/95 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-baseline gap-2">
-            <span
-              className="text-2xl font-black tracking-widest bg-gradient-to-r from-white via-cyan-300 to-blue-500 bg-clip-text text-transparent"
-              style={{ fontFamily: "var(--font-display)" }}
-            >
-              TMDLE
+            <span className="text-2xl tracking-widest text-[#eae3d2]" style={{ fontFamily: "var(--font-display)" }}>
+              TMD<span className="text-[#ff5800]">LE</span>
             </span>
-            <span className="text-xs font-medium text-cyan-400">by chilly</span>
+            <span className="wrl-label">by chilly</span>
           </Link>
 
-          {/* Desktop nav */}
-          <div className="hidden items-center gap-5 text-sm font-medium text-gray-400 md:flex">
-            <Link href="/" className="transition-colors hover:text-white">Games</Link>
-            <Link href="/mapguessr" className="transition-colors hover:text-white">MapGuessr</Link>
-            <Link href="/profile" className="transition-colors hover:text-white">Profile</Link>
-
-            {/* Support button */}
-            <button
-              onClick={() => setSupportOpen(true)}
-              className="transition-colors hover:text-white"
-            >
+          <div className="hidden items-center gap-5 text-sm font-medium text-[#9c9483] md:flex">
+            {links.map((l) => (
+              <Link key={l.href} href={l.href} className="transition-colors hover:text-[#eae3d2]">
+                {l.label}
+              </Link>
+            ))}
+            <button onClick={() => setSupportOpen(true)} className="transition-colors hover:text-[#eae3d2]">
               Support
             </button>
 
-            {/* Discord */}
             <a
               href="https://discord.com/invite/7ePXZyd6hW"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-all hover:opacity-90"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:opacity-90"
               style={{ backgroundColor: "#5865F2" }}
               title="Join the TMDLE Discord"
             >
@@ -99,15 +83,13 @@ export default function Navbar() {
 
             {isLoaded && !isSignedIn && (
               <SignInButton mode="modal">
-                <button className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-xs font-semibold text-cyan-400 transition-all hover:border-cyan-400/50 hover:bg-cyan-400/15">
-                  Sign in
-                </button>
+                <button className="wrl-btn-primary !py-1.5 !text-xs">Sign in</button>
               </SignInButton>
             )}
             {isLoaded && isSignedIn && (
               <Link
                 href="/profile"
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-gray-400 transition-all hover:border-cyan-500/30 hover:text-cyan-400"
+                className="flex h-8 w-8 items-center justify-center border border-[#383228] text-[#9c9483] transition-all hover:border-[#ff5800] hover:text-[#ff5800]"
                 title="Profile"
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
@@ -117,30 +99,25 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Hamburger (mobile) */}
-          <button
-            className="flex flex-col gap-1.5 p-1 md:hidden"
-            onClick={() => setMenuOpen((v) => !v)}
-            aria-label="Toggle menu"
-          >
-            <span className={`block h-0.5 w-6 bg-white transition-transform ${menuOpen ? "translate-y-2 rotate-45" : ""}`} />
-            <span className={`block h-0.5 w-6 bg-white transition-opacity ${menuOpen ? "opacity-0" : ""}`} />
-            <span className={`block h-0.5 w-6 bg-white transition-transform ${menuOpen ? "-translate-y-2 -rotate-45" : ""}`} />
+          <button className="flex flex-col gap-1.5 p-1 md:hidden" onClick={() => setMenuOpen((v) => !v)} aria-label="Toggle menu">
+            <span className={`block h-0.5 w-6 bg-[#eae3d2] transition-transform ${menuOpen ? "translate-y-2 rotate-45" : ""}`} />
+            <span className={`block h-0.5 w-6 bg-[#eae3d2] transition-opacity ${menuOpen ? "opacity-0" : ""}`} />
+            <span className={`block h-0.5 w-6 bg-[#eae3d2] transition-transform ${menuOpen ? "-translate-y-2 -rotate-45" : ""}`} />
           </button>
         </div>
 
-        {/* Mobile menu */}
         {menuOpen && (
-          <div className="border-t border-white/10 px-6 py-4 md:hidden">
+          <div className="border-t border-[#383228] px-6 py-4 md:hidden">
             <ul className="flex flex-col gap-4 text-sm font-medium">
-              <li><Link href="/" className="text-gray-300 transition-colors hover:text-white" onClick={() => setMenuOpen(false)}>Games</Link></li>
-              <li><Link href="/mapguessr" className="text-gray-300 transition-colors hover:text-white" onClick={() => setMenuOpen(false)}>MapGuessr</Link></li>
-              <li><Link href="/profile" className="text-gray-300 transition-colors hover:text-white" onClick={() => setMenuOpen(false)}>Profile</Link></li>
+              {links.map((l) => (
+                <li key={l.href}>
+                  <Link href={l.href} className="text-[#9c9483] transition-colors hover:text-[#eae3d2]" onClick={() => setMenuOpen(false)}>
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
               <li>
-                <button
-                  onClick={() => { setMenuOpen(false); setSupportOpen(true); }}
-                  className="text-gray-300 transition-colors hover:text-white"
-                >
+                <button onClick={() => { setMenuOpen(false); setSupportOpen(true); }} className="text-[#9c9483] transition-colors hover:text-[#eae3d2]">
                   About / Support
                 </button>
               </li>
@@ -150,7 +127,7 @@ export default function Navbar() {
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => setMenuOpen(false)}
-                  className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-all hover:opacity-90"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:opacity-90"
                   style={{ backgroundColor: "#5865F2" }}
                 >
                   <svg width="14" height="14" viewBox="0 0 71 55" fill="currentColor">

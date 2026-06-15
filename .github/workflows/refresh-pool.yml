@@ -1,0 +1,52 @@
+name: Refresh Higher or Lower map pool
+
+# Pulls the newest Track of the Day maps (current + previous month) from
+# trackmania.io, downloads each WR ghost, renders the racing-line layout,
+# and appends them to src/data/wrorlower-pool.json. Committing the updated
+# pool to main triggers the normal Vercel deploy, so the game grows its
+# deck automatically every month.
+
+on:
+  schedule:
+    # 04:17 UTC on the 1st of every month — previous month's TOTDs are complete
+    - cron: "17 4 1 * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install numpy
+        run: pip install numpy
+
+      - name: Build ghost dumper once (restores GBX.NET packages)
+        run: dotnet build -c Release tools
+
+      - name: Refresh pool
+        run: python tools/build_pool.py
+
+      - name: Commit updated pool
+        run: |
+          if git diff --quiet -- src/data/wrorlower-pool.json; then
+            echo "Pool unchanged, nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/data/wrorlower-pool.json
+          git commit -m "Monthly map pool refresh ($(date -u +%Y-%m))"
+          git push

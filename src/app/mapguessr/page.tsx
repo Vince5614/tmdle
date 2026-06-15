@@ -15,7 +15,7 @@ export default async function MapGuessrPage() {
   if (!target) {
     return (
       <div className="flex justify-center items-center py-32">
-        <p className="text-gray-500 text-sm">Failed to load today&apos;s map. Try again later.</p>
+        <p className="text-[#9c9483] text-sm">Failed to load today&apos;s map. Try again later.</p>
       </div>
     );
   }
