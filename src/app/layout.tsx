@@ -37,6 +37,9 @@ export const metadata: Metadata = {
   title: "TMDLE — Daily Trackmania Games",
   description:
     "A Trackmania community games hub. Daily puzzles and challenges, every day.",
+  // The site ships its own dark motorsport palette; tell Dark Reader and
+  // similar extensions to leave it alone so the intended colors render.
+  other: { "darkreader-lock": "1" },
 };
 
 export default function RootLayout({
