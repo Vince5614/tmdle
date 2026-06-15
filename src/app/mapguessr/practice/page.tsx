@@ -30,7 +30,7 @@ export default async function MapGuessrPracticePage({
   if (!target) {
     return (
       <div className="flex justify-center items-center py-32">
-        <p className="text-gray-500 text-sm">Failed to load map. Try another round.</p>
+        <p className="text-[#9c9483] text-sm">Failed to load map. Try another round.</p>
       </div>
     );
   }

@@ -1,27 +1,34 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
 import { createServerSupabase } from "@/lib/supabase";
 
 const ADMIN_EMAIL = "steyversv@gmail.com";
+const ALLOWED_GAMES = ["mapguessr", "wrorlower", "wrorlower-practice"];
 
-export async function GET() {
+// GET /api/admin/stats?game=mapguessr (default keeps old behavior intact)
+export async function GET(req: NextRequest) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const email = user.emailAddresses[0]?.emailAddress;
   if (email !== ADMIN_EMAIL) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const supabase = createServerSupabase();
+  const game = req.nextUrl.searchParams.get("game") ?? "mapguessr";
+  if (!ALLOWED_GAMES.includes(game)) {
+    return NextResponse.json({ error: "Unknown game" }, { status: 400 });
+  }
 
+  const supabase = createServerSupabase();
   const { data, error } = await supabase
     .from("game_results")
     .select("day_number, user_id, won, clue_index")
-    .eq("game", "mapguessr")
+    .eq("game", game)
     .order("day_number", { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // Group by day
+  // Group by day. For wrorlower games, clue_index holds the score (0-10),
+  // so avgClue doubles as the average score.
   const byDay: Record<number, { total: number; signedIn: number; guests: number; wins: number; clueIndexes: number[] }> = {};
   for (const row of data ?? []) {
     if (!byDay[row.day_number]) {

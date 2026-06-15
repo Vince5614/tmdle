@@ -1,20 +1,20 @@
 export default function Footer() {
   return (
-    <footer className="border-t border-white/10 py-8 text-center">
-      <p className="text-sm text-gray-500">
+    <footer className="border-t border-[#383228] py-8 text-center">
+      <p className="text-sm text-[#6b6557]">
         Made by{" "}
         <a
           href="https://www.twitch.tv/chilly7383"
           target="_blank"
           rel="noopener noreferrer"
-          className="font-semibold text-cyan-400 transition-colors hover:text-cyan-300"
+          className="font-semibold text-[#ff5800] transition-colors hover:text-[#eae3d2]"
         >
           chilly
         </a>
         {" · "}
-        <span className="text-gray-500">tmdle.com</span>
+        <span>tmdle.com</span>
         {" · "}
-        <span className="text-gray-600">{new Date().getFullYear()}</span>
+        <span>{new Date().getFullYear()}</span>
       </p>
     </footer>
   );

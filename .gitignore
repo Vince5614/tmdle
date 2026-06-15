@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# pool tooling (dotnet build output) + local integration snapshot
+/tools/bin/
+/tools/obj/
+/integration-package/
+
+# local Claude Code tooling config (permissions, preview launch)
+/.claude/

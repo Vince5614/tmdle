@@ -26,9 +26,61 @@ function dayNumberToDate(n: number): string {
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "numeric", year: "numeric" });
 }
 
+const MONO = { fontFamily: "var(--font-mono)" } as const;
+const DISPLAY = { fontFamily: "var(--font-display)" } as const;
+
+function GameSummary({ title, stats }: { title: string; stats: Stats | null }) {
+  const signedIn = stats?.days.reduce((a, d) => a + d.signedIn, 0) ?? 0;
+  const guests = stats?.days.reduce((a, d) => a + d.guests, 0) ?? 0;
+  return (
+    <div className="border border-[#383228] bg-[#1d1a15] p-4">
+      <p className="wrl-label mb-3">{title}</p>
+      <div className="grid grid-cols-3 gap-2 text-center">
+        {[
+          { label: "Plays", value: stats?.totalAllTime ?? "—" },
+          { label: "Signed in", value: signedIn },
+          { label: "Guests", value: guests },
+        ].map(({ label, value }) => (
+          <div key={label}>
+            <p className="wrl-mono text-2xl font-semibold text-[#eae3d2] tabular-nums">{value}</p>
+            <p className="text-[10px] uppercase tracking-widest text-[#6b6557] mt-1" style={MONO}>{label}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* one game's three comparison cells for a day row */
+function GameCells({ d }: { d: DayStat | undefined }) {
+  if (!d) {
+    return (
+      <>
+        <p className="wrl-mono text-sm text-[#6b6557] text-right">—</p>
+        <p className="wrl-mono text-sm text-[#6b6557] text-right">—</p>
+        <p className="wrl-mono text-sm text-[#6b6557] text-right">—</p>
+      </>
+    );
+  }
+  return (
+    <>
+      <p className="wrl-mono text-sm text-[#eae3d2] text-right font-semibold tabular-nums">
+        {d.total}
+        {d.guests > 0 && <span className="text-[#6b6557] font-normal"> ·{d.guests}g</span>}
+      </p>
+      <p className={`wrl-mono text-sm text-right tabular-nums ${d.winRate >= 50 ? "text-[#6fbf73]" : "text-[#e0492e]"}`}>
+        {d.winRate}%
+      </p>
+      <p className="wrl-mono text-sm text-[#9c9483] text-right tabular-nums">{d.avgClue}</p>
+    </>
+  );
+}
+
 export default function AdminPage() {
   const { user, isLoaded } = useUser();
-  const [stats, setStats] = useState<Stats | null>(null);
+  const [mg, setMg] = useState<Stats | null>(null);
+  const [hol, setHol] = useState<Stats | null>(null);
+  const [holPractice, setHolPractice] = useState<Stats | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Pre-warm state
@@ -83,19 +135,25 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (!isAdmin) return;
-    fetch("/api/admin/stats")
-      .then(r => r.json())
-      .then(d => {
-        if (d.error) setError(d.error);
-        else setStats(d);
+    async function load(game: string): Promise<Stats> {
+      const res = await fetch(`/api/admin/stats?game=${game}`);
+      const d = await res.json();
+      if (d.error) throw new Error(d.error);
+      return d;
+    }
+    Promise.all([load("mapguessr"), load("wrorlower"), load("wrorlower-practice")])
+      .then(([a, b, c]) => {
+        setMg(a);
+        setHol(b);
+        setHolPractice(c);
       })
-      .catch(() => setError("Failed to load stats"));
+      .catch((e) => setError(e instanceof Error ? e.message : "Failed to load stats"));
   }, [isAdmin]);
 
   if (!isLoaded) {
     return (
       <div className="flex justify-center py-32">
-        <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/10 border-t-cyan-500" />
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#383228] border-t-[#ff5800]" />
       </div>
     );
   }
@@ -103,52 +161,123 @@ export default function AdminPage() {
   if (!isAdmin) {
     return (
       <div className="flex justify-center items-center py-32">
-        <p className="text-gray-500 text-sm">Access denied.</p>
+        <p className="text-[#9c9483] text-sm">Access denied.</p>
       </div>
     );
   }
 
-  const totalGuests = stats?.days.reduce((a, d) => a + d.guests, 0) ?? 0;
-  const totalSignedIn = stats?.days.reduce((a, d) => a + d.signedIn, 0) ?? 0;
+  // Union of day numbers across both dailies, newest first, so the two games
+  // line up row by row even on days where only one of them was played.
+  const dayNumbers = [
+    ...new Set([...(mg?.days ?? []), ...(hol?.days ?? [])].map((d) => d.dayNumber)),
+  ].sort((a, b) => b - a);
+  const mgByDay = new Map((mg?.days ?? []).map((d) => [d.dayNumber, d]));
+  const holByDay = new Map((hol?.days ?? []).map((d) => [d.dayNumber, d]));
+
+  const practiceDay = holPractice?.days.find((d) => d.dayNumber === -1);
+
+  const gridCols = "grid grid-cols-[minmax(72px,auto)_repeat(6,1fr)] gap-x-3";
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
+    <div className="mx-auto max-w-4xl px-4 py-10">
       <div className="mb-8">
-        <p className="text-xs uppercase tracking-[0.2em] text-gray-500 mb-1" style={{ fontFamily: "var(--font-display)" }}>Admin</p>
-        <h1 className="text-4xl text-white" style={{ fontFamily: "var(--font-display)" }}>
-          Dashboard
-        </h1>
+        <p className="wrl-label mb-1">Admin</p>
+        <h1 className="text-4xl text-[#eae3d2]" style={DISPLAY}>Dashboard</h1>
       </div>
 
-      {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
+      {error && <p className="text-[#e0492e] text-sm mb-4">{error}</p>}
+
+      {/* All-time summaries, side by side */}
+      <div className="mb-6 grid gap-4 sm:grid-cols-2">
+        <GameSummary title="MapGuessr" stats={mg} />
+        <GameSummary title="Higher or Lower" stats={hol} />
+      </div>
+
+      {/* Day-by-day comparison table */}
+      <div className="mb-6 border border-[#383228] bg-[#1d1a15] overflow-x-auto">
+        <div className="px-5 py-3 border-b border-[#383228]">
+          <p className="wrl-label">By day — both games</p>
+        </div>
+        <div className="min-w-[560px]">
+          {/* group header */}
+          <div className={`${gridCols} px-5 pt-2.5 pb-1`}>
+            <span />
+            <span className="col-span-3 text-center text-[10px] uppercase tracking-widest text-[#9c9483] border-b border-[#383228] pb-1" style={MONO}>
+              MapGuessr
+            </span>
+            <span className="col-span-3 text-center text-[10px] uppercase tracking-widest text-[#ff5800] border-b border-[#383228] pb-1" style={MONO}>
+              Higher or Lower
+            </span>
+          </div>
+          <div className={`${gridCols} text-[10px] uppercase tracking-widest text-[#6b6557] px-5 py-2 border-b border-[#383228]`} style={MONO}>
+            <span>Date</span>
+            <span className="text-right">Plays</span>
+            <span className="text-right">Win %</span>
+            <span className="text-right">Avg clue</span>
+            <span className="text-right">Plays</span>
+            <span className="text-right">Win %</span>
+            <span className="text-right">Avg score</span>
+          </div>
+          {dayNumbers.map((n) => (
+            <div key={n} className={`${gridCols} px-5 py-3 border-b border-[#383228]/60 last:border-0 items-center hover:bg-[#242019] transition-colors`}>
+              <div>
+                <p className="wrl-mono text-xs text-[#eae3d2] font-semibold">{dayNumberToDate(n)}</p>
+                <p className="text-[10px] text-[#6b6557]" style={MONO}>Day #{n}</p>
+              </div>
+              <GameCells d={mgByDay.get(n)} />
+              <GameCells d={holByDay.get(n)} />
+            </div>
+          ))}
+          {dayNumbers.length === 0 && (
+            <p className="px-5 py-6 text-sm text-[#6b6557]">No plays recorded yet.</p>
+          )}
+        </div>
+        <p className="px-5 py-2 text-[10px] text-[#6b6557] border-t border-[#383228]" style={MONO}>
+          Plays = total, ·Ng = guest share · MapGuessr avg = wrong guesses before solving · HoL avg = score out of 10
+        </p>
+      </div>
+
+      {/* Higher or Lower practice, aggregate only (no day numbers) */}
+      <div className="mb-8 border border-[#383228] bg-[#1d1a15] p-4">
+        <p className="wrl-label mb-3">Higher or Lower — practice runs</p>
+        <div className="grid grid-cols-3 gap-2 text-center">
+          {[
+            { label: "Runs", value: holPractice?.totalAllTime ?? 0 },
+            { label: "Win %", value: practiceDay ? `${practiceDay.winRate}%` : "—" },
+            { label: "Avg score", value: practiceDay ? practiceDay.avgClue : "—" },
+          ].map(({ label, value }) => (
+            <div key={label}>
+              <p className="wrl-mono text-2xl font-semibold text-[#eae3d2] tabular-nums">{value}</p>
+              <p className="text-[10px] uppercase tracking-widest text-[#6b6557] mt-1" style={MONO}>{label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* MapGuessr 2.0 cache pre-warm */}
-      <div className="mb-8 rounded-xl border border-white/8 bg-[#111] p-5">
+      <div className="mb-8 border border-[#383228] bg-[#1d1a15] p-5">
         <div className="flex items-center justify-between mb-2">
-          <p className="text-xs uppercase tracking-widest text-gray-500" style={{ fontFamily: "var(--font-display)" }}>
-            MapGuessr 2.0 — MX Cache
-          </p>
+          <p className="wrl-label">MapGuessr 2.0 — MX Cache</p>
           <button
             onClick={runPreWarm}
             disabled={warming}
-            className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-xs font-semibold text-cyan-400 transition-all hover:border-cyan-400/50 hover:bg-cyan-400/15 disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{ fontFamily: "var(--font-display)" }}
+            className="wrl-btn-primary !px-4 !py-2 !text-xs disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {warming ? "Caching…" : "Pre-warm all maps"}
           </button>
         </div>
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-[#9c9483]">
           Fetches MX data for every official campaign map and stores it in <code>map_metadata</code>. Run once after deploying — makes the /mapguessr dropdown instant.
         </p>
         {warmProgress && (
           <div className="mt-3">
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/5">
+            <div className="h-1.5 w-full overflow-hidden bg-[#383228]">
               <div
-                className="h-full bg-cyan-500 transition-all"
+                className="h-full bg-[#ff5800] transition-all"
                 style={{ width: `${(warmProgress.totalCached / warmProgress.total) * 100}%` }}
               />
             </div>
-            <p className="mt-1.5 text-[10px] text-gray-500" style={{ fontFamily: "var(--font-display)" }}>
+            <p className="mt-1.5 text-[10px] text-[#6b6557]" style={MONO}>
               {warmProgress.totalCached} / {warmProgress.total} cached
               {warmProgress.errors > 0 && ` · ${warmProgress.errors} errors`}
               {!warming && warmProgress.totalCached === warmProgress.total && " · ✓ done"}
@@ -157,19 +286,15 @@ export default function AdminPage() {
         )}
 
         <div className="mt-4 flex items-center gap-3">
-          <button
-            onClick={loadUncached}
-            className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
+          <button onClick={loadUncached} className="wrl-btn !px-3 !py-1.5 !text-[11px]">
             Show what&apos;s still uncached
           </button>
         </div>
 
         {uncachedView && (
-          <div className="mt-3 rounded-lg border border-white/8 bg-black/30 p-3">
-            <p className="mb-2 text-[11px] text-gray-400">
-              <span className="font-semibold text-white" style={{ fontFamily: "var(--font-display)" }}>{uncachedView.uncached}</span> uncached, grouped by season:
+          <div className="mt-3 border border-[#383228] bg-[#15130f]/60 p-3">
+            <p className="mb-2 text-[11px] text-[#9c9483]">
+              <span className="wrl-mono font-semibold text-[#eae3d2]">{uncachedView.uncached}</span> uncached, grouped by season:
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-[10px]">
               {Object.entries(uncachedView.bySeason)
@@ -177,11 +302,11 @@ export default function AdminPage() {
                 .map(([season, names]) => (
                   <div key={season} className="flex flex-col">
                     <div className="flex items-baseline gap-2">
-                      <span className="text-gray-300 font-semibold" style={{ fontFamily: "var(--font-display)" }}>{season}</span>
-                      <span className="text-gray-500">{names.length}/25</span>
+                      <span className="text-[#eae3d2] font-semibold" style={MONO}>{season}</span>
+                      <span className="text-[#6b6557]">{names.length}/25</span>
                     </div>
                     {names.length <= 5 && (
-                      <p className="text-gray-600 ml-2 mt-0.5">
+                      <p className="text-[#6b6557] ml-2 mt-0.5">
                         Missing: {names.map((n) => `#${n.match(/(\d{2})$/)?.[1] ?? "??"}`).join(", ")}
                       </p>
                     )}
@@ -191,54 +316,6 @@ export default function AdminPage() {
           </div>
         )}
       </div>
-
-      {stats && (
-        <>
-          {/* All-time summary */}
-          <div className="grid grid-cols-3 gap-3 mb-8">
-            {[
-              { label: "Total Plays", value: stats.totalAllTime },
-              { label: "Signed In", value: totalSignedIn },
-              { label: "Guests", value: totalGuests },
-            ].map(({ label, value }) => (
-              <div key={label} className="rounded-xl border border-white/10 bg-[#111] p-4 text-center">
-                <p className="text-2xl font-bold text-white" style={{ fontFamily: "var(--font-display)" }}>{value}</p>
-                <p className="text-[10px] uppercase tracking-widest text-gray-500 mt-1">{label}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Per-day table */}
-          <div className="rounded-xl border border-white/8 bg-[#111] overflow-hidden">
-            <div className="px-5 py-3 border-b border-white/5">
-              <p className="text-xs uppercase tracking-widest text-gray-500" style={{ fontFamily: "var(--font-display)" }}>By Day</p>
-            </div>
-            <div className="grid grid-cols-[auto_1fr_1fr_1fr_1fr_1fr] text-[10px] uppercase tracking-widest text-gray-600 px-5 py-2 border-b border-white/5 gap-3">
-              <span>Date</span>
-              <span className="text-right">Total</span>
-              <span className="text-right">Signed In</span>
-              <span className="text-right">Guests</span>
-              <span className="text-right">Win %</span>
-              <span className="text-right">Avg Clue</span>
-            </div>
-            {stats.days.map(d => (
-              <div key={d.dayNumber} className="grid grid-cols-[auto_1fr_1fr_1fr_1fr_1fr] px-5 py-3 border-b border-white/5 last:border-0 gap-3 items-center hover:bg-white/[0.02] transition-colors">
-                <div>
-                  <p className="text-xs text-white font-semibold" style={{ fontFamily: "var(--font-display)" }}>{dayNumberToDate(d.dayNumber)}</p>
-                  <p className="text-[10px] text-gray-600">Day #{d.dayNumber}</p>
-                </div>
-                <p className="text-sm text-white text-right font-semibold" style={{ fontFamily: "var(--font-display)" }}>{d.total}</p>
-                <p className="text-sm text-cyan-400 text-right" style={{ fontFamily: "var(--font-display)" }}>{d.signedIn}</p>
-                <p className="text-sm text-purple-400 text-right" style={{ fontFamily: "var(--font-display)" }}>{d.guests}</p>
-                <p className={`text-sm text-right font-semibold ${d.winRate >= 50 ? "text-green-400" : "text-red-400"}`} style={{ fontFamily: "var(--font-display)" }}>
-                  {d.winRate}%
-                </p>
-                <p className="text-sm text-gray-400 text-right" style={{ fontFamily: "var(--font-display)" }}>{d.avgClue}</p>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
     </div>
   );
 }

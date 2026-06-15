@@ -6,28 +6,19 @@ import { SignInButton, useUser } from "@clerk/nextjs";
 
 function SupportModal({ onClose }: { onClose: () => void }) {
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm px-4"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-xs rounded-2xl border border-white/10 bg-[#111] p-7 text-center"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="mb-4 flex h-14 w-14 mx-auto items-center justify-center rounded-2xl bg-cyan-500/10 border border-cyan-500/20">
-          <span className="text-2xl">🎮</span>
-        </div>
-        <h2 className="text-lg font-bold text-white mb-1" style={{ fontFamily: "var(--font-display)" }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-4" onClick={onClose}>
+      <div className="w-full max-w-xs border border-[#383228] bg-[#1d1a15] p-7 text-center" onClick={(e) => e.stopPropagation()}>
+        <h2 className="mb-1 text-lg text-[#eae3d2]" style={{ fontFamily: "var(--font-display)" }}>
           Made by chilly
         </h2>
-        <p className="text-xs text-gray-500 mb-5 leading-relaxed">
+        <p className="mb-5 text-xs leading-relaxed text-[#9c9483]">
           Trackmania streamer, speedrunner, and creator of TMDLE — a daily games hub for the TM community.
         </p>
         <a
           href="https://www.twitch.tv/chilly7383"
           target="_blank"
           rel="noopener noreferrer"
-          className="mb-3 flex items-center justify-center gap-2 w-full rounded-xl py-3 text-sm font-semibold transition-all"
+          className="mb-3 flex w-full items-center justify-center gap-2 py-3 text-sm font-semibold transition-all"
           style={{ backgroundColor: "#9146ff", color: "#fff", fontFamily: "var(--font-display)" }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -35,12 +26,7 @@ function SupportModal({ onClose }: { onClose: () => void }) {
           </svg>
           Follow on Twitch
         </a>
-        <button
-          onClick={onClose}
-          className="w-full rounded-xl border border-white/10 py-2.5 text-xs text-gray-500 transition-colors hover:text-gray-300"
-        >
-          Close
-        </button>
+        <button onClick={onClose} className="wrl-btn w-full">Close</button>
       </div>
     </div>
   );
@@ -51,48 +37,59 @@ export default function Navbar() {
   const [supportOpen, setSupportOpen] = useState(false);
   const { isSignedIn, isLoaded } = useUser();
 
+  const links = [
+    { href: "/", label: "Games" },
+    { href: "/mapguessr", label: "MapGuessr" },
+    { href: "/higherorlower", label: "Higher or Lower" },
+    { href: "/profile", label: "Profile" },
+  ];
+
   return (
     <>
       {supportOpen && <SupportModal onClose={() => setSupportOpen(false)} />}
 
-      <nav className="sticky top-0 z-40 border-b border-white/10 bg-[#0f0f0f]/90 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          {/* Logo */}
+      <nav className="sticky top-0 z-40 border-b border-[#383228] bg-[#15130f]/95 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-baseline gap-2">
-            <span
-              className="text-2xl font-black tracking-widest bg-gradient-to-r from-white via-cyan-300 to-blue-500 bg-clip-text text-transparent"
-              style={{ fontFamily: "var(--font-display)" }}
-            >
-              TMDLE
+            <span className="text-2xl tracking-widest text-[#eae3d2]" style={{ fontFamily: "var(--font-display)" }}>
+              TMD<span className="text-[#ff5800]">LE</span>
             </span>
-            <span className="text-xs font-medium text-cyan-400">by chilly</span>
+            <span className="wrl-label">by chilly</span>
           </Link>
 
-          {/* Desktop nav */}
-          <div className="hidden items-center gap-5 text-sm font-medium text-gray-400 md:flex">
-            <Link href="/" className="transition-colors hover:text-white">Games</Link>
-            <Link href="/mapguessr" className="transition-colors hover:text-white">MapGuessr</Link>
-            <Link href="/profile" className="transition-colors hover:text-white">Profile</Link>
-
-            {/* Support button */}
-            <button
-              onClick={() => setSupportOpen(true)}
-              className="transition-colors hover:text-white"
-            >
+          <div className="hidden items-center gap-5 text-sm font-medium text-[#9c9483] md:flex">
+            {links.map((l) => (
+              <Link key={l.href} href={l.href} className="transition-colors hover:text-[#eae3d2]">
+                {l.label}
+              </Link>
+            ))}
+            <button onClick={() => setSupportOpen(true)} className="transition-colors hover:text-[#eae3d2]">
               Support
             </button>
 
+            <a
+              href="https://discord.com/invite/7ePXZyd6hW"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:opacity-90"
+              style={{ backgroundColor: "#5865F2" }}
+              title="Join the TMDLE Discord"
+            >
+              <svg width="14" height="14" viewBox="0 0 71 55" fill="currentColor">
+                <path d="M60.1045 4.8978C55.5792 2.8214 50.7265 1.2916 45.6527 0.41542C45.5603 0.39851 45.468 0.440769 45.4204 0.525289C44.7963 1.6353 44.105 3.0834 43.6209 4.2216C38.1637 3.4046 32.7345 3.4046 27.3892 4.2216C26.905 3.0581 26.1886 1.6353 25.5617 0.525289C25.5141 0.443589 25.4218 0.40133 25.3294 0.41542C20.2584 1.2888 15.4057 2.8186 10.8776 4.8978C10.8384 4.9147 10.8048 4.9429 10.7825 4.9795C1.57795 18.7309 -0.943561 32.1443 0.293408 45.3914C0.299005 45.4562 0.335386 45.5182 0.385761 45.5576C6.45866 50.0174 12.3413 52.7249 18.1147 54.5195C18.2071 54.5477 18.305 54.5139 18.3638 54.4378C19.7295 52.5728 20.9469 50.6063 21.9907 48.5383C22.0523 48.4172 21.9935 48.2735 21.8676 48.2256C19.9366 47.4931 18.0979 46.6 16.3292 45.5858C16.1893 45.5041 16.1781 45.304 16.3068 45.2082C16.679 44.9293 17.0513 44.6391 17.4067 44.3461C17.471 44.2926 17.5606 44.2813 17.6362 44.3151C29.2558 49.6202 41.8354 49.6202 53.3179 44.3151C53.3935 44.2785 53.4831 44.2898 53.5502 44.3433C53.9057 44.6363 54.2779 44.9293 54.6529 45.2082C54.7816 45.304 54.7732 45.5041 54.6333 45.5858C52.8646 46.6197 51.0259 47.4931 49.0921 48.2228C48.9662 48.2707 48.9102 48.4172 48.9718 48.5383C50.038 50.6034 51.2554 52.5699 52.5959 54.435C52.6519 54.5139 52.7526 54.5477 52.845 54.5195C58.6464 52.7249 64.529 50.0174 70.6019 45.5576C70.6551 45.5182 70.6887 45.459 70.6943 45.3942C72.1747 30.0791 68.2147 16.7757 60.1968 4.9823C60.1772 4.9429 60.1437 4.9147 60.1045 4.8978ZM23.7259 37.3253C20.2276 37.3253 17.3451 34.1136 17.3451 30.1693C17.3451 26.225 20.1717 23.0133 23.7259 23.0133C27.308 23.0133 30.1626 26.2532 30.1066 30.1693C30.1066 34.1136 27.28 37.3253 23.7259 37.3253ZM47.3178 37.3253C43.8196 37.3253 40.9371 34.1136 40.9371 30.1693C40.9371 26.225 43.7636 23.0133 47.3178 23.0133C50.9 23.0133 53.7545 26.2532 53.6985 30.1693C53.6985 34.1136 50.9 37.3253 47.3178 37.3253Z"/>
+              </svg>
+              Discord
+            </a>
+
             {isLoaded && !isSignedIn && (
               <SignInButton mode="modal">
-                <button className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-xs font-semibold text-cyan-400 transition-all hover:border-cyan-400/50 hover:bg-cyan-400/15">
-                  Sign in
-                </button>
+                <button className="wrl-btn-primary !py-1.5 !text-xs">Sign in</button>
               </SignInButton>
             )}
             {isLoaded && isSignedIn && (
               <Link
                 href="/profile"
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-gray-400 transition-all hover:border-cyan-500/30 hover:text-cyan-400"
+                className="flex h-8 w-8 items-center justify-center border border-[#383228] text-[#9c9483] transition-all hover:border-[#ff5800] hover:text-[#ff5800]"
                 title="Profile"
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
@@ -102,32 +99,42 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Hamburger (mobile) */}
-          <button
-            className="flex flex-col gap-1.5 p-1 md:hidden"
-            onClick={() => setMenuOpen((v) => !v)}
-            aria-label="Toggle menu"
-          >
-            <span className={`block h-0.5 w-6 bg-white transition-transform ${menuOpen ? "translate-y-2 rotate-45" : ""}`} />
-            <span className={`block h-0.5 w-6 bg-white transition-opacity ${menuOpen ? "opacity-0" : ""}`} />
-            <span className={`block h-0.5 w-6 bg-white transition-transform ${menuOpen ? "-translate-y-2 -rotate-45" : ""}`} />
+          <button className="flex flex-col gap-1.5 p-1 md:hidden" onClick={() => setMenuOpen((v) => !v)} aria-label="Toggle menu">
+            <span className={`block h-0.5 w-6 bg-[#eae3d2] transition-transform ${menuOpen ? "translate-y-2 rotate-45" : ""}`} />
+            <span className={`block h-0.5 w-6 bg-[#eae3d2] transition-opacity ${menuOpen ? "opacity-0" : ""}`} />
+            <span className={`block h-0.5 w-6 bg-[#eae3d2] transition-transform ${menuOpen ? "-translate-y-2 -rotate-45" : ""}`} />
           </button>
         </div>
 
-        {/* Mobile menu */}
         {menuOpen && (
-          <div className="border-t border-white/10 px-6 py-4 md:hidden">
+          <div className="border-t border-[#383228] px-6 py-4 md:hidden">
             <ul className="flex flex-col gap-4 text-sm font-medium">
-              <li><Link href="/" className="text-gray-300 transition-colors hover:text-white" onClick={() => setMenuOpen(false)}>Games</Link></li>
-              <li><Link href="/mapguessr" className="text-gray-300 transition-colors hover:text-white" onClick={() => setMenuOpen(false)}>MapGuessr</Link></li>
-              <li><Link href="/profile" className="text-gray-300 transition-colors hover:text-white" onClick={() => setMenuOpen(false)}>Profile</Link></li>
+              {links.map((l) => (
+                <li key={l.href}>
+                  <Link href={l.href} className="text-[#9c9483] transition-colors hover:text-[#eae3d2]" onClick={() => setMenuOpen(false)}>
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
               <li>
-                <button
-                  onClick={() => { setMenuOpen(false); setSupportOpen(true); }}
-                  className="text-gray-300 transition-colors hover:text-white"
-                >
+                <button onClick={() => { setMenuOpen(false); setSupportOpen(true); }} className="text-[#9c9483] transition-colors hover:text-[#eae3d2]">
                   About / Support
                 </button>
+              </li>
+              <li>
+                <a
+                  href="https://discord.com/invite/7ePXZyd6hW"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setMenuOpen(false)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:opacity-90"
+                  style={{ backgroundColor: "#5865F2" }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 71 55" fill="currentColor">
+                    <path d="M60.1045 4.8978C55.5792 2.8214 50.7265 1.2916 45.6527 0.41542C45.5603 0.39851 45.468 0.440769 45.4204 0.525289C44.7963 1.6353 44.105 3.0834 43.6209 4.2216C38.1637 3.4046 32.7345 3.4046 27.3892 4.2216C26.905 3.0581 26.1886 1.6353 25.5617 0.525289C25.5141 0.443589 25.4218 0.40133 25.3294 0.41542C20.2584 1.2888 15.4057 2.8186 10.8776 4.8978C10.8384 4.9147 10.8048 4.9429 10.7825 4.9795C1.57795 18.7309 -0.943561 32.1443 0.293408 45.3914C0.299005 45.4562 0.335386 45.5182 0.385761 45.5576C6.45866 50.0174 12.3413 52.7249 18.1147 54.5195C18.2071 54.5477 18.305 54.5139 18.3638 54.4378C19.7295 52.5728 20.9469 50.6063 21.9907 48.5383C22.0523 48.4172 21.9935 48.2735 21.8676 48.2256C19.9366 47.4931 18.0979 46.6 16.3292 45.5858C16.1893 45.5041 16.1781 45.304 16.3068 45.2082C16.679 44.9293 17.0513 44.6391 17.4067 44.3461C17.471 44.2926 17.5606 44.2813 17.6362 44.3151C29.2558 49.6202 41.8354 49.6202 53.3179 44.3151C53.3935 44.2785 53.4831 44.2898 53.5502 44.3433C53.9057 44.6363 54.2779 44.9293 54.6529 45.2082C54.7816 45.304 54.7732 45.5041 54.6333 45.5858C52.8646 46.6197 51.0259 47.4931 49.0921 48.2228C48.9662 48.2707 48.9102 48.4172 48.9718 48.5383C50.038 50.6034 51.2554 52.5699 52.5959 54.435C52.6519 54.5139 52.7526 54.5477 52.845 54.5195C58.6464 52.7249 64.529 50.0174 70.6019 45.5576C70.6551 45.5182 70.6887 45.459 70.6943 45.3942C72.1747 30.0791 68.2147 16.7757 60.1968 4.9823C60.1772 4.9429 60.1437 4.9147 60.1045 4.8978ZM23.7259 37.3253C20.2276 37.3253 17.3451 34.1136 17.3451 30.1693C17.3451 26.225 20.1717 23.0133 23.7259 23.0133C27.308 23.0133 30.1626 26.2532 30.1066 30.1693C30.1066 34.1136 27.28 37.3253 23.7259 37.3253ZM47.3178 37.3253C43.8196 37.3253 40.9371 34.1136 40.9371 30.1693C40.9371 26.225 43.7636 23.0133 47.3178 23.0133C50.9 23.0133 53.7545 26.2532 53.6985 30.1693C53.6985 34.1136 50.9 37.3253 47.3178 37.3253Z"/>
+                  </svg>
+                  Join Discord
+                </a>
               </li>
             </ul>
           </div>
