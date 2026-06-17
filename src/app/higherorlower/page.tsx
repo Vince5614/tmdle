@@ -5,8 +5,9 @@ import HigherOrLower from "@/components/HigherOrLower";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Higher or Lower — TMDLE",
-  description: "Ten real maps, real world-record racing lines. Faster or slower? New deck every midnight (Brussels time).",
+  title: "Higher or Lower — Daily Trackmania World Record Game",
+  description: "A daily Trackmania game: ten real maps with real world-record racing lines. Is the next WR faster or slower? New deck every day. Free, no login needed.",
+  alternates: { canonical: "/higherorlower" },
 };
 
 export default function HigherOrLowerPage() {

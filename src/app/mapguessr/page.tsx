@@ -6,6 +6,12 @@ import MapGuessr from "./MapGuessr";
 
 export const dynamic = "force-dynamic";
 
+export const metadata = {
+  title: "MapGuessr — Daily Trackmania Map Quiz",
+  description: "A daily Trackmania guessing game: identify today's official campaign map. Each guess reveals season, year, surface, car and style. Free, new map every day.",
+  alternates: { canonical: "/mapguessr" },
+};
+
 export default async function MapGuessrPage() {
   const allMapNames = getAllMapNames();
   const dailyIdx = getDailyIndex(allMapNames.length);

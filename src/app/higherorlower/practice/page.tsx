@@ -3,7 +3,7 @@ import PracticeGate from "./PracticeGate";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Higher or Lower · Practice — TMDLE" };
+export const metadata = { title: "Higher or Lower · Practice" };
 
 export default function HigherOrLowerPracticePage() {
   const deck = getPracticeDeck(Math.floor(Math.random() * 2 ** 31));

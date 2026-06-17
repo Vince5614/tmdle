@@ -34,9 +34,39 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TMDLE — Daily Trackmania Games",
+  metadataBase: new URL("https://tmdle.com"),
+  title: {
+    default: "TMDLE — Daily Trackmania Games",
+    template: "%s — TMDLE",
+  },
   description:
-    "A Trackmania community games hub. Daily puzzles and challenges, every day.",
+    "TMDLE is the daily Trackmania game hub. Play free daily Trackmania puzzles — MapGuessr (guess the campaign map) and Higher or Lower (guess the world record). A new TM daily challenge every day. Made by chilly.",
+  applicationName: "TMDLE",
+  keywords: [
+    "TMDLE", "Trackmania daily", "Trackmania daily game", "tm daily", "daily tm",
+    "daily game tm", "Trackmania game", "daily Trackmania", "Trackmania puzzle",
+    "Trackmania wordle", "MapGuessr", "Trackmania map quiz", "Trackmania guessing game",
+  ],
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    siteName: "TMDLE",
+    url: "https://tmdle.com",
+    title: "TMDLE — Daily Trackmania Games",
+    description:
+      "Free daily Trackmania games — a new TM puzzle every day. Play MapGuessr and Higher or Lower.",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "TMDLE — Daily Trackmania Games",
+    description: "Free daily Trackmania games — a new TM puzzle every day.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large" },
+  },
   // The site ships its own dark motorsport palette; tell Dark Reader and
   // similar extensions to leave it alone so the intended colors render.
   other: { "darkreader-lock": "1" },
