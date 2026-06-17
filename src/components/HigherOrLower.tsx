@@ -22,7 +22,14 @@ function crowdPct(uid: string): number {
   return 35 + (h % 50);
 }
 
+// small thin crosshair cursor (lighter than the native one); falls back to
+// the OS crosshair if the data URI is ever rejected
+const CROSS_CURSOR =
+  "url(\"data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='13'%20height='13'%3E%3Cpath%20d='M6.5%200.5V12.5M0.5%206.5H12.5'%20stroke='%23eae3d2'%20stroke-width='1'/%3E%3C/svg%3E\") 6 6, crosshair";
+
 function MapVisual({ m }: { m: WrlMap }) {
+  const [hover, setHover] = useState<number | null>(null);
+
   if (!m.layoutOk) {
     return (
       <div className="wrl-thumbwrap">
@@ -39,14 +46,32 @@ function MapVisual({ m }: { m: WrlMap }) {
     );
   }
   return (
-    <svg viewBox="0 0 130 100" style={{ height: "88%", maxWidth: "92%" }} fill="none">
-      {m.segs.map((s, i) => (
-        <path key={i} d={s.d} stroke="#9c9483" strokeOpacity={s.o} strokeWidth={s.w}
-          strokeLinejoin="round" strokeLinecap="round" />
-      ))}
-      <circle cx={m.sx} cy={m.sy} r="4" fill="#6fbf73" stroke="#15130f" strokeWidth="1.5" />
-      <circle cx={m.fx} cy={m.fy} r="4" fill="#e0492e" stroke="#15130f" strokeWidth="1.5" />
-    </svg>
+    <div
+      className="relative flex h-full w-full items-center justify-center"
+      onMouseLeave={() => setHover(null)}
+    >
+      <svg viewBox="0 0 130 100" fill="none" style={{ height: "88%", maxWidth: "92%" }}>
+        {m.segs.map((s, i) => (
+          <g key={i}>
+            <path d={s.d} stroke={s.c ?? "#9c9483"} strokeOpacity={s.o} strokeWidth={s.w}
+              strokeLinejoin="round" strokeLinecap="round" />
+            {/* invisible fat hit-area so the thin line is easy to hover */}
+            {s.v != null && (
+              <path d={s.d} stroke="transparent" strokeWidth={Math.max(s.w + 5, 8)} fill="none"
+                strokeLinejoin="round" strokeLinecap="round" style={{ cursor: CROSS_CURSOR }}
+                onMouseEnter={() => setHover(s.v!)} onMouseLeave={() => setHover((v) => (v === s.v ? null : v))} />
+            )}
+          </g>
+        ))}
+        <circle cx={m.sx} cy={m.sy} r="4" fill="#6fbf73" stroke="#15130f" strokeWidth="1.5" />
+        <circle cx={m.fx} cy={m.fy} r="4" fill="#e0492e" stroke="#15130f" strokeWidth="1.5" />
+      </svg>
+      {hover != null && (
+        <div className="pointer-events-none absolute right-1.5 top-1.5 z-10 border border-[#383228] bg-[#15130f]/90 px-2 py-0.5 wrl-mono text-xs tabular-nums text-[#eae3d2]">
+          {hover} km/h
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -55,14 +80,33 @@ function MapCard({
 }: {
   m: WrlMap; revealed: boolean; revealColor?: "ok" | "bad" | null; children?: React.ReactNode;
 }) {
+  const [zoom, setZoom] = useState(false);
   return (
-    <article className="flex flex-col overflow-hidden border border-[#383228] bg-[#1d1a15]">
-      <div className="relative flex h-[170px] items-center justify-center border-b border-[#383228] bg-[#242019]">
+    <article className="flex flex-col border border-[#383228] bg-[#1d1a15]">
+      <div
+        className="relative flex h-[170px] items-center justify-center border border-[#383228] bg-[#242019]"
+        style={{
+          transformOrigin: "center",
+          transform: zoom ? "scale(1.5)" : "scale(1)",
+          transition: "transform 0.18s ease",
+          zIndex: zoom ? 30 : undefined,
+          boxShadow: zoom ? "0 10px 40px rgba(0,0,0,0.6)" : undefined,
+        }}
+        onMouseEnter={() => setZoom(true)}
+        onMouseLeave={() => setZoom(false)}
+      >
         <MapVisual m={m} />
       </div>
       <div className="flex flex-1 flex-col gap-1 p-4">
         <span className="wrl-label">{m.src}</span>
-        <span className="wrl-condensed text-2xl uppercase tracking-wide text-[#eae3d2]">{m.name}</span>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="wrl-condensed text-2xl uppercase tracking-wide text-[#eae3d2]">{m.name}</span>
+          {m.style && (
+            <span className="wrl-label border border-[#383228] px-1.5 py-0.5 leading-none text-[#9c9483]">
+              {m.style}
+            </span>
+          )}
+        </div>
         <span className="wrl-label mt-2">{revealed ? "World record" : "World record is…"}</span>
         <span
           className={`wrl-mono mt-1 text-[32px] font-semibold tabular-nums ${
@@ -315,6 +359,15 @@ export default function HigherOrLower({
           )}
         </MapCard>
       </section>
+
+      {/* speed legend — the racing line is coloured by the WR car's real speed,
+          on a fixed scale so the same km/h is the same colour on every track */}
+      <div className="mt-4 flex items-center gap-3">
+        <span className="wrl-label shrink-0">Line speed · hover for km/h</span>
+        <span className="text-[10px] uppercase tracking-widest text-[#6b6557]" style={{ fontFamily: "var(--font-mono)" }}>0</span>
+        <div className="h-1.5 flex-1 rounded-sm" style={{ background: "linear-gradient(90deg,#4a90d9,#6fbf73,#f0c846,#ff5800)" }} />
+        <span className="text-[10px] uppercase tracking-widest text-[#6b6557]" style={{ fontFamily: "var(--font-mono)" }}>430+ km/h</span>
+      </div>
 
       {phase === "verdict" && (
         <div className="mt-6 flex flex-wrap items-center gap-5 border border-[#383228] bg-[#1d1a15] px-5 py-4">

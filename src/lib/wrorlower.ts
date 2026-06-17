@@ -6,11 +6,13 @@ export interface WrlMap {
   name: string;
   /** YYYY-MM-DD the map entered the pool; absent on the launch batch. */
   added?: string;
+  /** Primary TMX style tag (Tech, Reactor, …) shown as a small hint. */
+  style?: string;
   src: string;
   wr: number;
   holder: string;
   thumb: string;
-  segs: { d: string; o: number; w: number }[];
+  segs: { d: string; o: number; w: number; c?: string; v?: number }[];
   sx: number; sy: number; fx: number; fy: number;
   layoutOk: boolean;
 }

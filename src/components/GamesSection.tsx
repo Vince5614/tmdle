@@ -69,12 +69,17 @@ function GameRow({ game }: { game: Game }) {
   );
 }
 
+// Only games that are actually playable are shown. The rest of GAMES are
+// roadmap ideas kept here for when they ship — they're intentionally hidden
+// from the homepage so we don't advertise unbuilt games.
+const LIVE_GAMES = GAMES.filter((g) => g.href);
+
 export default function GamesSection() {
   return (
     <section>
       <p className="wrl-label mb-4">The full lineup</p>
       <div className="flex flex-col gap-2">
-        {GAMES.map((g) => (
+        {LIVE_GAMES.map((g) => (
           <GameRow key={g.number} game={g} />
         ))}
       </div>

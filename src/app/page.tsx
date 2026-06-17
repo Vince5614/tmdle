@@ -4,9 +4,47 @@ import { getDateLabel, getDayNumber } from "@/lib/seed";
 
 export const dynamic = "force-dynamic";
 
+const STRUCTURED_DATA = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      name: "TMDLE",
+      alternateName: ["Trackmania Daily", "TM Daily", "Daily Trackmania Games"],
+      url: "https://tmdle.com",
+      description:
+        "TMDLE is the daily Trackmania game hub — free daily Trackmania puzzles, a new challenge every day.",
+    },
+    {
+      "@type": "VideoGame",
+      name: "MapGuessr",
+      url: "https://tmdle.com/mapguessr",
+      applicationCategory: "Game",
+      gamePlatform: "Web browser",
+      description:
+        "A daily Trackmania map guessing game — identify today's official campaign map from attribute clues.",
+      isPartOf: { "@type": "WebSite", name: "TMDLE", url: "https://tmdle.com" },
+    },
+    {
+      "@type": "VideoGame",
+      name: "Higher or Lower",
+      url: "https://tmdle.com/higherorlower",
+      applicationCategory: "Game",
+      gamePlatform: "Web browser",
+      description:
+        "A daily Trackmania world-record game — guess whether the next map's WR is faster or slower.",
+      isPartOf: { "@type": "WebSite", name: "TMDLE", url: "https://tmdle.com" },
+    },
+  ],
+};
+
 export default function HomePage() {
   return (
     <div className="mx-auto max-w-5xl px-6 py-14">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(STRUCTURED_DATA) }}
+      />
       {/* ── Hero ── */}
       <div className="mb-12">
         <p className="wrl-label mb-4">
