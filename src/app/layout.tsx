@@ -67,6 +67,8 @@ export const metadata: Metadata = {
     follow: true,
     googleBot: { index: true, follow: true, "max-image-preview": "large" },
   },
+  // Google Search Console ownership verification
+  verification: { google: "Foie1LJdQtb7Id8sZKY_0fhIl93mr2DBQjlZaHLsZL0" },
   // The site ships its own dark motorsport palette; tell Dark Reader and
   // similar extensions to leave it alone so the intended colors render.
   other: { "darkreader-lock": "1" },
