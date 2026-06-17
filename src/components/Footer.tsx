@@ -20,6 +20,8 @@ export default function Footer() {
       </p>
 
       <div className="mt-3 flex items-center justify-center gap-3 text-xs">
+        <Link href="/faq" className="text-[#6b6557] transition-colors hover:text-[#eae3d2]">FAQ</Link>
+        <span className="text-[#383228]">·</span>
         <Link href="/privacy" className="text-[#6b6557] transition-colors hover:text-[#eae3d2]">Privacy</Link>
         <span className="text-[#383228]">·</span>
         <Link href="/terms" className="text-[#6b6557] transition-colors hover:text-[#eae3d2]">Terms</Link>
